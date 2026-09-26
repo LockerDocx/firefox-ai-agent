@@ -244,7 +244,12 @@ def _is_loopback_url(base_url):
 # get started. Quality is not traded away — these are the measured-best
 # arrangements of the free tiers (docs/providers.md):
 #
-#   NVIDIA key present → NVIDIA runs all three roles, and nothing is mixed in.
+#   NVIDIA key present → NVIDIA runs all three roles on z-ai/glm-5.3-flash with thinking off
+#     (the user's own choice, 2026-09-26). Measured cost of that choice, same day, same key,
+#     scripts/bench_profiles.py: the full-size model answered the executor role in 1.9 s median
+#     and the text role in 1.4 s, flash answered 37.4 s and 56.1 s — flash is the smaller model
+#     of the same family and waits in the same free-tier queue, which is where the seconds are. The
+#     defaults follow the user's instruction; the faster model is one line away for any role.
 #     Groq's free tier is 8 000 tokens per minute and the executor burns that in a
 #     couple of steps, so a mixed setup started failing mid-run with HTTP 429 and the
 #     provider's "upgrade to Dev Tier" message. A free key that expires mid-mission is
@@ -258,7 +263,11 @@ def _is_loopback_url(base_url):
 # so the executor and the text writer default to glm-5.3 on that provider: 10x faster on the
 # role that is called on every step, at the same measured quality (routing 12/12, 0 dangerous).
 DERIVED_MODELS = {
-    "nvidia": {"planner": "z-ai/glm-5.3", "policy": "z-ai/glm-5.3", "text": "z-ai/glm-5.3"},
+    "nvidia": {
+        "planner": "z-ai/glm-5.3-flash",
+        "policy": "z-ai/glm-5.3-flash",
+        "text": "z-ai/glm-5.3-flash",
+    },
     "groq": {"planner": "openai/gpt-oss-120b", "policy": "openai/gpt-oss-20b", "text": "openai/gpt-oss-20b"},
     "deepseek": {"planner": "deepseek-chat", "policy": "deepseek-chat", "text": "deepseek-chat"},
 }

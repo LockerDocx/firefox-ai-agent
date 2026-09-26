@@ -71,11 +71,29 @@ def test_a_profile_that_leaves_reasoning_alone_leaves_it_alone(env_of):
     """`default` must not smuggle a setting in: it is the app's own default, nothing else."""
     import os
 
-    bench.apply_profile(bench.PROFILES["nvidia-current"])
+    bench.apply_profile(bench.PROFILES["nvidia-big-none"] | {"roles": {
+        "planner": ("nvidia", "z-ai/glm-5.3", "default"),
+        "policy": ("nvidia", "openai/gpt-oss-20b", "default"),
+        "text": ("nvidia", "openai/gpt-oss-20b", "default"),
+    }})
     planner, policy = bench.describe_wire("planner"), bench.describe_wire("policy")
     assert planner["model"] == "nvidia:z-ai/glm-5.3"
     assert policy["model"] == "nvidia:openai/gpt-oss-20b"
     assert "PLANNER_REASONING" not in os.environ and "POLICY_REASONING" not in os.environ
+
+
+def test_the_shipped_default_is_what_the_bench_calls_current(env_of):
+    """The profile named `current` must be the arrangement the app derives today, role by role.
+
+    It reads the shipped table instead of repeating it, so the bench cannot drift from the
+    product: if someone changes DERIVED_MODELS and forgets this profile, this fails.
+    """
+    profile = bench.PROFILES["nvidia-current"]
+    for role in ("planner", "policy", "text"):
+        provider, model, reasoning = profile["roles"][role]
+        assert provider == "nvidia", role
+        assert model == providers.DERIVED_MODELS["nvidia"][role], role
+        assert reasoning == "none", "and thinking is off, which is the point of the profile"
 
 
 def test_every_role_gets_the_model_of_the_profile(env_of):
@@ -99,7 +117,9 @@ def test_applying_a_profile_is_reversible(env_of):
     bench.apply_profile(bench.PROFILES["nvidia-hybrid"])
     assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
     bench.apply_profile(bench.PROFILES["nvidia-current"])
-    assert providers.selection_for("policy") == ("nvidia", "openai/gpt-oss-20b")
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3-flash")
+    bench.apply_profile(bench.PROFILES["nvidia-big-none"])
     assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3")
 
 

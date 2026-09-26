@@ -25,16 +25,19 @@ Extraído del propio código (no de suposiciones): `pyproject.toml`, `extension/
 
 ## 2. Configuración recomendada
 
-- **Nada obligatorio**: con **una sola clave** (la de Groq) el host deriva proveedor y modelo para los tres
-  roles — planner incluido (`groq:openai/gpt-oss-120b`), executor y text (`openai/gpt-oss-20b`). Con la clave de
-  NVIDIA además, el planner pasa a `nvidia:z-ai/glm-5.3` (la pareja medida como mejor). **Se pega en el sidebar
-  de Firefox** (tarjeta de primer arranque, o botón *🔑 API keys*); el host la guarda en `.env` y la usa al
-  instante, sin reiniciar nada. Plantilla para escribirla a mano: `.env.example` (basta `GROQ_API_KEY=...`).
+- **Nada obligatorio**: la clave que el panel pide es la de **NVIDIA**, y esa sola cubre los tres roles con
+  `z-ai/glm-5.3-flash` sin razonamiento (el modelo y el «sin pensar» son la elección del 26/09/2026). Si la que
+  tienes es la de **Groq**, también funciona todo sola: planner `groq:openai/gpt-oss-120b`, executor y text
+  `openai/gpt-oss-20b`. **Se pega en el sidebar de Firefox** (tarjeta de primer arranque, o botón
+  *🔑 API keys*); el host la guarda en `.env` y la usa al instante, sin reiniciar nada. Plantilla para
+  escribirla a mano: `.env.example`.
 - **Overrides opcionales** en `.env`/panel: `POLICY_*`, `PLANNER_*`, `TEXT_MODEL_*` (`PROVIDER`/`MODEL`/`BASE_URL`/`API_KEY`
   por rol). Lo configurado a mano siempre gana a lo derivado. Referencia completa: `docs/providers.md`.
-- **Modelos que mejor rinden** (medidos en la prueba real de hoy): Groq `openai/gpt-oss-20b`
-  para *policy* y *text* (273–281 ms), NVIDIA `z-ai/glm-5.3` para *planner* (≈1 s).
-  `*_REASONING=low` acelera sin perder calidad.
+- **Los más rápidos medidos** (26/09/2026, misma clave de NVIDIA): `z-ai/glm-5.3` sin razonamiento —
+  *executor* **1,9 s** de mediana (12 llamadas), *text* **1,4 s** (4), *planner* 25,7 s (9). El modelo que se
+  envía, `z-ai/glm-5.3-flash` sin razonamiento, midió **37,4 s**, **56,1 s** y **75,7 s** en esos mismos tres
+  papeles: en la capa gratuita el coste es la cola, no el tamaño del modelo. Para cambiar de modelo:
+  panel **⚙️ Modelos y parámetros** o `POLICY_MODEL=z-ai/glm-5.3` en el `.env`.
 - **Instalación**: `uv sync` (hay `uv.lock`) o `python -m venv .venv && pip install -e .`
 - **Arranque (opcional)**: `start-host.*` registra el host en Firefox (manifest nativo por usuario, sin admin) y a partir
   de ahí el navegador lo arranca solo al abrir el sidebar. `jev-register-host --unregister` lo revierte;

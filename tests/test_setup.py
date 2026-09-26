@@ -71,16 +71,16 @@ def test_both_keys_are_not_mixed(clean_env):
     """
     clean_env.setenv("GROQ_API_KEY", "gsk_test")
     clean_env.setenv("NVIDIA_API_KEY", "nvapi-test")
-    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3")
+    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3-flash")
 
 
 def test_one_nvidia_key_runs_all_three_roles(clean_env):
     clean_env.setenv("NVIDIA_API_KEY", "nvapi-test")
-    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3")
+    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3-flash")
     assert providers.resolve("text")["name"] == "nvidia"
 
 
@@ -120,7 +120,7 @@ def test_a_key_that_is_no_longer_offered_is_still_reported(clean_env):
     assert "8 000 tokens/minute" in detected["GROQ_API_KEY"]["note"]
     assert status["keys"]["GROQ_API_KEY"] is True
     # and it changes nothing about what runs
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3")
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
 
 
 def test_a_groq_key_alone_still_runs_everything(clean_env):
@@ -139,15 +139,15 @@ def test_explicit_configuration_always_wins(clean_env):
     clean_env.setenv("POLICY_MODEL", "deepseek-reasoner")
     assert providers.selection_for("policy") == ("deepseek", "deepseek-reasoner")
     # and a role left alone still derives (from the key present, not from the one configured)
-    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3")
+    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3-flash")
 
 
 def test_a_provider_alone_implies_its_documented_models(clean_env):
     """Choosing a provider without a model must not be a dead end."""
     clean_env.setenv("NVIDIA_API_KEY", "nvapi-test")
     clean_env.setenv("POLICY_PROVIDER", "nvidia")
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.resolve("policy")["model"] == "z-ai/glm-5.3"
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.resolve("policy")["model"] == "z-ai/glm-5.3-flash"
 
 
 def test_an_explicit_provider_without_a_key_still_fails_loudly(clean_env):
@@ -163,10 +163,10 @@ def test_the_sidebar_shows_what_actually_runs(clean_env):
     clean_env.setenv("NVIDIA_API_KEY", "nvapi-test")
     selection = parameters.current_selection()
     assert selection["planner"]["provider"] == "nvidia"
-    assert selection["planner"]["model"] == "z-ai/glm-5.3"
+    assert selection["planner"]["model"] == "z-ai/glm-5.3-flash"
     assert selection["policy"]["provider"] == "nvidia"
     assert selection["policy"]["schema"]["parameters"]  # the real per-model surface
-    assert parameters.model_for("text") == ("nvidia", "z-ai/glm-5.3")
+    assert parameters.model_for("text") == ("nvidia", "z-ai/glm-5.3-flash")
 
 
 def test_the_planner_runs_out_of_the_box(clean_env):
@@ -272,9 +272,9 @@ def test_a_key_saved_from_one_folder_is_found_from_any_other(tmp_path, monkeypat
     assert providers.key_for("nvidia") == "nvapi-saved-in-one-folder"
     assert providers.is_configured() is True
     # and one NVIDIA key is enough for all three roles
-    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3")
-    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3")
+    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("text") == ("nvidia", "z-ai/glm-5.3-flash")
 
 
 def test_the_key_file_lives_next_to_the_code_whatever_the_cwd_is(tmp_path, monkeypatch):

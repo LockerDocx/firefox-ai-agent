@@ -19,9 +19,9 @@ model of whatever free key is present**. You only need to set the key:
 
 | Keys present | Planner | Executor | Text helper |
 | --- | --- | --- | --- |
-| `NVIDIA_API_KEY` only (recommended) | `nvidia:z-ai/glm-5.3` | `nvidia:z-ai/glm-5.3` | `nvidia:z-ai/glm-5.3` |
+| `NVIDIA_API_KEY` only (recommended) | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` |
 | `GROQ_API_KEY` only | `groq:openai/gpt-oss-120b` | `groq:openai/gpt-oss-20b` | `groq:openai/gpt-oss-20b` |
-| Both keys, or `DEEPSEEK_API_KEY` alone | `nvidia:z-ai/glm-5.3` | `nvidia:z-ai/glm-5.3` | `nvidia:z-ai/glm-5.3` |
+| Both keys, or `DEEPSEEK_API_KEY` alone | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` |
 
 With one key that provider runs all three roles — the planner included, on the stronger model of
 that provider rather than the executor's. **With both keys present nothing is mixed**: the first
@@ -76,9 +76,8 @@ prompts and token budgets the agent itself uses, each candidate on its own CI jo
 | --- | --- | --- | --- | --- |
 | **Groq only** (the fast anchor) | 1.4 s | **0.4 s** | **0.26 s** | plans 3/3 · routing 12/12 · values 4/4 |
 | NVIDIA only, old defaults (`glm-5.3` plans, `gpt-oss-20b` executes) | 30 s | 36 s | 9 s | plans 2-3/3 · routing 12/12 · values 4/4 |
-| NVIDIA only, **current defaults** (`glm-5.3` everywhere) | 37 s | **2-5 s** | 1.6-98 s | plans 2/3 · routing 12/12 · values 4/4 |
-| NVIDIA only, `z-ai/glm-5.3-flash` with thinking off | **85 s** | 43 s | 42 s | plans 2/2 · routing 12/12 · values 4/4 |
-| NVIDIA only, `z-ai/glm-5.3` with thinking off | 37 s | 2-52 s | 1.6-98 s | plans 2/3 · routing 12/12 · values 4/4 |
+| NVIDIA only, `glm-5.3` with thinking off (the faster arrangement, one line away) | 37 s | **2-5 s** | 1.6-98 s | plans 2/3 · routing 12/12 · values 4/4 |
+| NVIDIA only, `z-ai/glm-5.3-flash` with thinking off (**current defaults**) | 85 s | 43 s | 42 s | plans 2/2 · routing 12/12 · values 4/4 |
 
 Read it as medians of a handful of calls, and read the spread: NVIDIA NIM's free tier answered the same
 prompt in 1.6 s once and in 98 s on another run, and once did not answer for 60 s at all (the retry then
@@ -87,6 +86,14 @@ faster — the queue is the cost, not the parameters.** If you want a snappy age
 key, the Groq key is the lever — provided you stay under its 8 000 tokens per minute; the current
 defaults instead keep one provider (NVIDIA) for the whole mission, which is slower per step and
 finishes.
+
+The defaults are `z-ai/glm-5.3-flash` with thinking off in all three roles, which was an explicit
+product decision on 26 September 2026. On 26-27 September, with the same key, that arrangement measured
+**37.4 s** median for the executor role (12 calls), **56.1 s** for the text helper (4) and **75.7 s** for
+the planner (2 valid of 9, four of them timing out at 60 s), against **1.9 s**, **1.4 s** and **25.7 s**
+for `z-ai/glm-5.3` with thinking off in the same run — flash is the smaller model of the same family and
+waits in the same free-tier queue, which is where the seconds are. Both arrangements are one line apart:
+`POLICY_MODEL` / `PLANNER_MODEL` / `TEXT_MODEL`, or the **Models & parameters** panel.
 
 Reproduce it: `python scripts/bench_profiles.py --list`, then
 `python scripts/bench_profiles.py --profile nvidia-flash-none` with your key in `.env`. `--floor 0.8` makes

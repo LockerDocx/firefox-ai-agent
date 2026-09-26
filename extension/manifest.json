@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "AI Agent for Firefox",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "description": "Sidebar agent: plan with a deep model, execute fast, drive your own Firefox tab.",
   "browser_specific_settings": {
     "gecko": {

@@ -15,6 +15,31 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.4] — 2026-09-27
+
+Every cloud role moves to `z-ai/glm-5.3-flash` with thinking off, on the user's explicit instruction.
+
+### Changed
+
+- **The derived default on an NVIDIA key is `z-ai/glm-5.3-flash` with `reasoning=none`, in all three
+  roles.** Thinking was already off by default; the model is the change. It is one line per role to
+  move back (`PLANNER_MODEL` / `POLICY_MODEL` / `TEXT_MODEL`, or the **Models & parameters** panel),
+  and `scripts/bench_profiles.py` now carries both arrangements as profiles — `nvidia-current` is
+  whatever ships, `nvidia-big-none` is the same setup on the full-size model — with a test that fails
+  if the profile and the shipped table drift apart.
+
+### Measured cost of that choice (same key, same day, `scripts/bench_profiles.py`)
+
+| Role | `z-ai/glm-5.3` (thinking off) | `z-ai/glm-5.3-flash` (thinking off) |
+| --- | --- | --- |
+| Planner | 25.7 s median, worst 159.6 s, 6/9 valid plans | 75.7 s median, worst 104.7 s, 2/2 valid |
+| Executor (every step) | **1.9 s median** (n=12), worst 9.8 s | **37.4 s median** (n=12), worst 107.7 s |
+| Text writer | **1.4 s median** (n=4), worst 1.8 s | **56.1 s median** (n=4), worst 172.8 s |
+
+Flash is the smaller model of the same family and waits in the same free-tier queue, so what changes is
+the queue's mood, not the parameter count: on 25 September the same comparison came out 85 s / 43 s / 42 s
+for flash. Both tables are in `docs/providers.md`, and neither is a guess.
+
 ## [0.12.3] — 2026-09-26
 
 The version that stops a run from dying of capacity, and stops every decision from costing a

@@ -29,7 +29,7 @@ Five steps, about ten minutes, no commands to type.
 | Step | What you do |
 | --- | --- |
 | **1 · Download** | **[Download the ZIP](https://github.com/LockerDocx/firefox-ai-agent/archive/refs/heads/main.zip)** (or the `source.zip` from [Releases](https://github.com/LockerDocx/firefox-ai-agent/releases/latest)) and extract it somewhere you will keep it. |
-| **2 · Free key** | Get one at **[build.nvidia.com](https://build.nvidia.com)** → sign in → *API Keys* (2 minutes, free). **One key runs all three roles** (`z-ai/glm-5.3`). A Groq key is optional and faster per call, but its free tier is 8 000 tokens/minute and the executor can spend that mid-mission — mixing is opt-in, with `POLICY_*`. |
+| **2 · Free key** | Get one at **[build.nvidia.com](https://build.nvidia.com)** → sign in → *API Keys* (2 minutes, free). **One key runs all three roles** (`z-ai/glm-5.3-flash`, thinking off). A Groq key is optional and faster per call, but its free tier is 8 000 tokens/minute and the executor can spend that mid-mission — mixing is opt-in, with `POLICY_*`. |
 | **3 · One double-click** | Double-click the starter for your system — `start-host.bat` (Windows), `start-host.command` (macOS), `start-host.sh` (Linux). It prepares everything (~1 min) and **registers the agent with Firefox**. From then on this double-click is not needed again. |
 | **4 · Load the add-on** | Firefox → `about:debugging` → *This Firefox* → **Load Temporary Add-on…** → pick the **`ai-agent-for-firefox-*.xpi`** from [Releases](https://github.com/LockerDocx/firefox-ai-agent/releases/latest) (or `extension/manifest.json`). |
 | **5 · Paste the key** | Open the **agent sidebar** (toolbar button), paste the key into the card, press **Save**. Then press **Test setup**: every model turns green with its latency. |
@@ -107,12 +107,12 @@ Method and raw evidence: [docs/performance.md](docs/performance.md) · [docs/fli
 | **Firefox** | 109 or newer (the add-on is loaded temporarily; the sidebar is the UI) |
 | **Python** | 3.11+ (3.11 / 3.12 / 3.13 tested) |
 | **Machine** | anything — the host process uses ~40 MB of RAM and no GPU; 8 GB is plenty |
-| **Keys** | one free NVIDIA NIM key, and it runs all three roles on `z-ai/glm-5.3` |
+| **Keys** | one free NVIDIA NIM key, and it runs all three roles on `z-ai/glm-5.3-flash` with thinking off |
 | **Docker** | optional, only for the isolated browser (≈2 GB of disk) |
 
 ## Providers
 
-Any OpenAI-compatible or Anthropic-compatible endpoint can drive any role: NVIDIA NIM, Groq, DeepSeek, OpenRouter, Together, Mistral, xAI, Gemini, your own gateway, or a loopback server (`POLICY_BASE_URL`). What a fresh install derives is one provider for the whole mission (NVIDIA `z-ai/glm-5.3` in all three roles): the faster NVIDIA-plans/Groq-executes split is available by naming the roles, and it is not the default because Groq's free tier is 8 000 tokens/minute and a long mission spends that mid-run. TypeSafe's Jev policy is still supported through `TYPESAFE_API_KEY` if you have one.
+Any OpenAI-compatible or Anthropic-compatible endpoint can drive any role: NVIDIA NIM, Groq, DeepSeek, OpenRouter, Together, Mistral, xAI, Gemini, your own gateway, or a loopback server (`POLICY_BASE_URL`). What a fresh install derives is one provider for the whole mission (NVIDIA `z-ai/glm-5.3-flash`, thinking off, in all three roles): the faster NVIDIA-plans/Groq-executes split is available by naming the roles, and it is not the default because Groq's free tier is 8 000 tokens/minute and a long mission spends that mid-run. TypeSafe's Jev policy is still supported through `TYPESAFE_API_KEY` if you have one.
 
 Configuration, presets and self-hosted gateways: [docs/providers.md](docs/providers.md) · which parameters each model really accepts: [docs/model-parameters.md](docs/model-parameters.md).
 

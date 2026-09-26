@@ -19,7 +19,7 @@ You can use, install, and even re-publish this project **without opening a termi
 | Windows | python.org installer, tick *Add python.exe to PATH* |
 
 openSUSE Leap 15.6's own `python3` is Python 3.6 (the one YaST uses), so on Leap the zypper command above is required; on Tumbleweed the shipped `python3` is already 3.13 and nothing has to be installed. The bar is 3.11 because that is the oldest interpreter current distributions still ship as an option. The starter looks for `python3.13`, `python3.12`, `python3.11`, `python3` in that order and uses the newest one it finds, so the 3.6 on Leap is never picked.
-- **One free API key** — an NVIDIA NIM key ([build.nvidia.com](https://build.nvidia.com) → *API Keys*). It is the only one needed: the planner, executor and text helper all run `z-ai/glm-5.3`. A Groq key ([console.groq.com](https://console.groq.com)) is optional, answers in a few hundred milliseconds, and is limited to 8 000 tokens/minute on the free tier.
+- **One free API key** — an NVIDIA NIM key ([build.nvidia.com](https://build.nvidia.com) → *API Keys*). It is the only one needed: the planner, executor and text helper all run `z-ai/glm-5.3-flash` with thinking off. A Groq key ([console.groq.com](https://console.groq.com)) is optional, answers in a few hundred milliseconds, and is limited to 8 000 tokens/minute on the free tier.
 
 > 📚 **Setup and daily use, system by system** (openSUSE/SUSE, Ubuntu/Debian/Mint, Fedora/RHEL/Rocky, Arch,
 > Windows, macOS, snap/Flatpak Firefox) — exact commands, verification and uninstall:

@@ -50,11 +50,19 @@ from scripts.routing_cases import ROUTING_CASES  # noqa: E402
 # model answers straight away (schemas.reasoning_body). "default" leaves the setting alone.
 PROFILES = {
     "nvidia-current": {
-        "note": "what one NVIDIA key gets today: GLM-5.3 planning, gpt-oss-20b executing",
+        "note": "what one NVIDIA key derives today: glm-5.3-flash everywhere, thinking off",
         "roles": {
-            "planner": ("nvidia", "z-ai/glm-5.3", "default"),
-            "policy": ("nvidia", "openai/gpt-oss-20b", "default"),
-            "text": ("nvidia", "openai/gpt-oss-20b", "default"),
+            "planner": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+            "policy": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+            "text": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+        },
+    },
+    "nvidia-big-none": {
+        "note": "the same setup on the full-size model: the comparison that decided the default",
+        "roles": {
+            "planner": ("nvidia", "z-ai/glm-5.3", "none"),
+            "policy": ("nvidia", "z-ai/glm-5.3", "none"),
+            "text": ("nvidia", "z-ai/glm-5.3", "none"),
         },
     },
     "nvidia-flash-none": {

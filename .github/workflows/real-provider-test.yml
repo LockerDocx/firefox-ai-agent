@@ -40,11 +40,11 @@ jobs:
           # NVIDIA-plans/Groq-executes split, which is no longer what a fresh install derives
           # (Groq's 8 000 tokens per minute are spent mid-mission).
           PLANNER_PROVIDER: nvidia
-          PLANNER_MODEL: z-ai/glm-5.3
+          PLANNER_MODEL: z-ai/glm-5.3-flash
           POLICY_PROVIDER: nvidia
-          POLICY_MODEL: z-ai/glm-5.3
+          POLICY_MODEL: z-ai/glm-5.3-flash
           TEXT_MODEL_PROVIDER: nvidia
-          TEXT_MODEL: z-ai/glm-5.3
+          TEXT_MODEL: z-ai/glm-5.3-flash
         run: |
           if [ -z "$NVIDIA_API_KEY" ] && [ -z "$GROQ_API_KEY" ]; then
             echo "No provider secrets configured (NVIDIA_API_KEY / GROQ_API_KEY)."
