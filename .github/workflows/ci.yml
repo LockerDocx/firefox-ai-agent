@@ -65,6 +65,12 @@ jobs:
           .venv/bin/jev-register-host --status
           test -f "$HOME/.mozilla/native-messaging-hosts/jev_ultrafast_host.json"
           grep -q "allowed_extensions" "$HOME/.mozilla/native-messaging-hosts/jev_ultrafast_host.json"
+      - name: The installer runs on openSUSE
+        # The whole point of it being stdlib-only and per-distro aware: it must work before any
+        # environment exists, on the systems we claim to support.
+        run: |
+          cd /src
+          .venv/bin/python scripts/install.py --check
 
   windows:
     name: Windows
@@ -85,8 +91,16 @@ jobs:
         run: |
           $text = Get-Content start-host.bat -Raw
           if ($text -notmatch 'py -3 -c "import sys') { throw "the starter does not try the py launcher" }
-          if ($text -notmatch '%PY% -m venv') { throw "the venv is not built with the discovered interpreter" }
+          if ($text -notmatch '%PY% scripts\\install.py') { throw "the starter does not run the installer with the interpreter it found" }
+          if ($text -match 'pip install') { throw "the starter installs by itself: the installer is the only place that does" }
           python -c "import jev_ultrafast.firefox, jev_ultrafast.native_setup, jev_ultrafast.providers; print('imports OK')"
+      - name: The installer runs on Windows
+        # The Windows paths are the ones most likely to rot: Scripts/python.exe instead of
+        # bin/python, %APPDATA% instead of ~/.mozilla, no POSIX symlinks.
+        shell: pwsh
+        run: |
+          python scripts/install.py --check | Out-String | Write-Host
+          if ($LASTEXITCODE -ne 0) { throw "the installer does not run on Windows" }
 
   test:
     runs-on: ubuntu-latest
