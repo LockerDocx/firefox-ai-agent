@@ -137,18 +137,25 @@ def test_the_requirement_is_311_not_312():
 
 @POSIX
 def test_the_starters_use_the_interpreter_they_found():
-    """The chosen interpreter must create the venv; assuming python3 breaks SUSE."""
+    """The chosen interpreter must run the install; assuming python3 breaks SUSE.
+
+    Since the installer took over the environment, the starters do not create it themselves
+    any more - but the interpreter they found is still the one that ends up inside `.venv`,
+    because `scripts/install.py` builds it with `sys.executable`, never with a fixed name.
+    """
     for script in ("start-host.sh", "start-host.command"):
         text = (ROOT / script).read_text(encoding="utf-8")
-        assert '"$PY" -m venv .venv' in text, script
+        assert '"$PY" scripts/install.py' in text, script
         assert "python3 -m venv" not in text, script
+    installer = (ROOT / "scripts" / "install.py").read_text(encoding="utf-8")
+    assert "sys.executable" in installer and "python3 -m venv" not in installer
 
 
 def test_windows_discovers_the_launcher_and_the_store_stub_case():
     text = (ROOT / "start-host.bat").read_text(encoding="utf-8")
     assert 'py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"' in text
     assert 'set "PY=python"' in text, "a python.exe install must also be accepted"
-    assert "%PY% -m venv .venv" in text
+    assert "%PY% scripts\\install.py" in text, "the installer runs under the interpreter that was found"
     assert "Microsoft Store" in text, "the Store stub is the most common Windows trap"
 
 

@@ -76,25 +76,22 @@ if [ -z "$PY" ]; then
 fi
 if [ -n "${JEV_START_DRY_RUN:-}" ]; then echo "PYTHON=$PY"; exit 0; fi
 
-if [ ! -d ".venv" ]; then
+# ── install or update ────────────────────────────────────────────────────────
+# One place decides what to install: scripts/install.py. Double-clicking always checks, so a
+# newer copy of the agent replaces the previous installation instead of being layered on top,
+# and an existing Laya is never installed a second time. Your keys (.env), your run history
+# (artifacts/) and your files (workspace/) are never touched by it.
+echo ""
+echo "Checking the installation..."
+if ! "$PY" scripts/install.py; then
   echo ""
-  echo "First run: preparing the agent. About one minute, internet needed..."
-  if ! "$PY" -m venv .venv; then
-    echo ""
-    echo " [!] Could not create the private environment (the 'venv' module is missing)."
-    echo "     On $(os_name), fix it with:"
-    echo "       $(venv_hint)"
-    echo "     Then run this file again."
-    echo ""
-    exit 1
-  fi
-  .venv/bin/python -m pip install --quiet --upgrade pip
-  if ! .venv/bin/python -m pip install --quiet -e ".[documents]"; then
-    echo ""
-    echo " [!] Installation failed. Check your internet connection and run this file again."
-    echo ""
-    exit 1
-  fi
+  echo " [!] The agent could not be installed or updated."
+  echo "     If it is the 'venv' module, on $(os_name) it comes with:"
+  echo "       $(venv_hint)"
+  echo "     Otherwise check your internet connection, then run this file again."
+  echo "     Your keys and your files were not touched."
+  echo ""
+  exit 1
 fi
 
 # Two lines in .env can pin the model that the agent used to derive: the wrong id some old
@@ -109,18 +106,6 @@ fi
 
 if [ ! -f ".env" ]; then
   cp .env.example .env
-fi
-
-echo ""
-echo "Registering the host with Firefox..."
-if .venv/bin/jev-register-host >/dev/null 2>&1; then
-  echo "  Done: from now on the sidebar starts the agent by itself - you will not need this window again."
-  echo "  This one stays open only as a fallback: if the panel says offline, it is to blame."
-  echo ""
-else
-  echo "  [!] Could not register it (Firefox will not start the agent on its own)."
-  echo "      Keep this window open while you use the agent - it still works exactly the same."
-  echo ""
 fi
 
 echo "Host starting. KEEP THIS WINDOW OPEN while you use the sidebar."

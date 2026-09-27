@@ -15,7 +15,7 @@ Guía definitiva: qué haces **una vez** (setup) y qué haces **cada día** (uso
 - [A · Lo común: el setup en 5 pasos](#a--lo-común-el-setup-en-5-pasos)
   - [Paso 1 · Descargar y descomprimir](#paso-1--descargar-y-descomprimir)
   - [Paso 2 · La clave gratis](#paso-2--la-clave-gratis)
-  - [Paso 3 · El doble clic (una sola vez)](#paso-3--el-doble-clic-una-sola-vez)
+  - [Paso 3 · El doble clic](#paso-3--el-doble-clic)
   - [Paso 4 · Cargar el add-on en Firefox](#paso-4--cargar-el-add-on-en-firefox)
   - [Paso 5 · Pegar la clave y probarlo](#paso-5--pegar-la-clave-y-probarlo)
   - [Las 4 comprobaciones de que está todo bien](#las-4-comprobaciones-de-que-está-todo-bien)
@@ -53,7 +53,7 @@ Guía definitiva: qué haces **una vez** (setup) y qué haces **cada día** (uso
 3. ⚠️ **No lo ejecutes desde dentro del ZIP.** Tiene que estar extraído.
 4. ✓ **Comprobación**: dentro de la carpeta ves `start-host.bat`, `start-host.sh`, `start-host.command` y una carpeta `extension`.
 
-> La carpeta que eliges pasa a ser "la carpeta del proyecto". Si la mueves de sitio más adelante, vuelve a hacer el [Paso 3](#paso-3--el-doble-clic-una-sola-vez) una vez.
+> La carpeta que eliges pasa a ser "la carpeta del proyecto". Si la mueves de sitio más adelante, vuelve a hacer el [Paso 3](#paso-3--el-doble-clic) una vez.
 
 ## Paso 2 · La clave gratis
 
@@ -65,7 +65,7 @@ El agente necesita una clave de IA (gratis). Se consigue en **NVIDIA** y **esa s
 
 > ⚡ **Opcional**: la clave de **Groq** (https://console.groq.com/keys) es más rápida por llamada, pero su plan gratuito son **8 000 tokens por minuto** y el ejecutor los gasta a mitad de misión (error 429). **Con la de NVIDIA ya funciona todo.**
 
-## Paso 3 · El doble clic (una sola vez)
+## Paso 3 · El doble clic
 
 Entra en la carpeta del proyecto y haz **doble clic** en el arranque de tu sistema:
 
@@ -75,15 +75,18 @@ Entra en la carpeta del proyecto y haz **doble clic** en el arranque de tu siste
 | macOS | **`start-host.command`** *(la primera vez: clic derecho → **Abrir** → **Abrir**)* |
 | Linux (openSUSE, Ubuntu, Fedora, Arch…) | **`start-host.sh`** |
 
-Qué pasa la primera vez: prepara todo él solo (~1 minuto, necesita internet) y deja el agente **registrado en Firefox**. Al final verás:
+Qué pasa la primera vez: prepara todo él solo (~1 minuto, necesita internet) y deja el agente **registrado en Firefox**. Al final verás algo así:
 
 ```
-Registering the host with Firefox...
-  Done: from now on the sidebar starts Jev by itself - you will not need this window again.
-  This one stays open only as a fallback: if the panel says offline, it is to blame.
+Checking the installation...
+Ready: version 0.12.6 in /tu/carpeta/.venv
+Firefox will now start the agent by itself (/home/tu-usuario/.mozilla/native-messaging-hosts/jev_ultrafast_host.json).
+You no longer need to double-click the starter: open the sidebar and it runs.
 ```
 
 **A partir de aquí ese doble clic ya no hace falta:** cuando abras el panel, Firefox arranca el agente por su cuenta, sin ninguna ventana. La ventana que se ha abierto puedes dejarla abierta o cerrarla: solo es el plan B.
+
+> **Cada doble clic comprueba, no solo pregunta.** Si esta carpeta ya tiene su instalación y está al día, no descarga nada y te lo dice (`already installed… nothing downloaded`). Si has puesto una versión nueva del proyecto, **borra la instalación anterior y pone esta**: nunca se apilan dos versiones. Y nunca toca tus claves (`.env`), tu historial (`artifacts/`) ni tus archivos (`workspace/`). Laya se recuerda: si ya estaba, vuelve a quedar puesta sin instalarla dos veces.
 
 > Si tu sistema no tiene Python 3.11 o superior, la ventana **no se cierra**: te dice qué falta y **el comando exacto para tu sistema**. Lo instalas y repites el doble clic. (Está en la Parte B, sistema por sistema.)
 
@@ -450,9 +453,12 @@ Y si usas el Firefox **.deb** oficial de Mozilla (el de mozilla.org), no hay nad
 ## Actualizar a una versión nueva
 
 1. Descarga el ZIP nuevo (o `git pull` si usas git) y descomprímelo **encima** de tu carpeta.
-2. **Un doble clic** en el starter de tu sistema otra vez (reconstruye lo que haga falta) y espera el `Done`.
+2. **Un doble clic** en el starter de tu sistema y espera a que diga `ready`. La instalación anterior **se borra** y se pone esta versión: no se parchea encima. Si ya estabas al día, no descarga nada.
 3. En Firefox: `about:debugging` → quita el add-on antiguo si sigue ahí → **Load Temporary Add-on…** → el `.xpi` nuevo. (30 segundos.)
-4. Tus claves, modelos y permisos **se conservan**: viven en `.env` y `artifacts/`.
+4. Tus claves, modelos y permisos **se conservan**: viven en `.env` y `artifacts/`, y el instalador no los abre. Tu `workspace/` tampoco se toca.
+5. **Laya no se instala dos veces**: si ya estaba puesto, el instalador lo vuelve a dejar puesto en el entorno nuevo (sus 644 MB ya estaban en el disco, así que no se descarga nada grande).
+
+> Para ver qué haría, sin que haga nada: `.venv/bin/python scripts/install.py --check` (o `--dry-run` para el plan paso a paso). `--reinstall` fuerza el borrado y la instalación limpia aunque ya estés al día.
 
 ## Mover la carpeta de sitio
 

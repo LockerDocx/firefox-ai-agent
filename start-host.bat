@@ -30,19 +30,22 @@ if not defined PY (
   exit /b 1
 )
 
-if not exist ".venv" (
+rem ── install or update ─────────────────────────────────────────────────────────
+rem One place decides what to install: scripts\install.py, the same file the other systems
+rem use. Double-clicking always checks, so a newer copy of the agent replaces the previous
+rem installation instead of being layered on top, and an existing Laya is never installed a
+rem second time. Your keys (.env), history (artifacts\) and files (workspace\) are not touched.
+echo.
+echo  Checking the installation...
+%PY% scripts\install.py
+if errorlevel 1 (
   echo.
-  echo  First run: preparing the agent. About one minute, internet needed...
-  %PY% -m venv .venv
-  ".venv\Scripts\python" -m pip install --quiet --upgrade pip
-  ".venv\Scripts\python" -m pip install --quiet -e ".[documents]"
-  if errorlevel 1 (
-    echo.
-    echo  [!] Installation failed. Check your internet connection and try again.
-    echo.
-    pause
-    exit /b 1
-  )
+  echo  [!] The agent could not be installed or updated.
+  echo      Check your internet connection, then double-click this file again.
+  echo      Your keys and your files were not touched.
+  echo.
+  pause
+  exit /b 1
 )
 
 rem Two lines in .env can pin the model the agent used to derive: the wrong id old templates
@@ -60,14 +63,7 @@ if not exist ".env" (
   copy /y ".env.example" ".env" >nul
 )
 
-echo  Registering the host with Firefox...
-".venv\Scripts\jev-register-host.exe" >nul 2>nul
-if errorlevel 1 (
-  echo   [!] Could not register it - keep this window open while you use the agent.
-) else (
-  echo   Done: from now on the sidebar starts the agent by itself, no window needed.
-  echo   This one stays open only as a fallback: if the panel says offline, it is to blame.
-)
+rem Firefox registration is done by scripts\install.py, which also reports it.
 echo.
 echo  Host starting. KEEP THIS WINDOW OPEN while you use the sidebar.
 echo.

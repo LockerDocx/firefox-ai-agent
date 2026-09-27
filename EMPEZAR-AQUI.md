@@ -69,12 +69,15 @@ La clave es como una contraseña para que el asistente use una IA. Se consigue e
    - **Linux** → `start-host.sh`
 3. **La primera vez** se prepara todo solo (instala lo necesario, ~1 minuto) y deja el agente **registrado en Firefox**:
    ```
-   Registering the host with Firefox...
-     Done: from now on the sidebar starts Jev by itself - you will not need this window again.
+   Checking the installation...
+   Ready: version 0.12.6 in C:\Jev\.venv
+   Firefox will now start the agent by itself (C:\Users\tu-usuario\AppData\Roaming\Mozilla\NativeMessagingHosts\jev_ultrafast_host.json).
    ```
+   Ese mismo doble clic es también el que **actualiza**: si más adelante dejas aquí una versión nueva del proyecto, borra la instalación vieja y pone la nueva (tus claves, tu historial y tus archivos no se tocan). Si ya estabas al día, no descarga nada.
 4. 🎉 **A partir de aquí este doble clic ya no hace falta.** En Firefox, al abrir el panel, el agente arranca **solo** (no verás ninguna ventana). La ventana que se ha abierto ahora queda como **respaldo**: puedes dejarla o cerrarla, tú decides.
    - Si el panel dijera **🔴 offline**, es que Firefox no dejó arrancarlo solo: deja esa ventana abierta y **todo funciona igual**. Si tu Firefox es el *snap* de Ubuntu o un *Flatpak*, el navegador lanza los programas locales a través de un permiso del sistema y puede pedírtelo la primera vez; si nunca conecta, usa la ventana.
    - Si mueves la carpeta de sitio, vuelve a hacer doble clic una vez (se registra de nuevo).
+   - Si ya lo tenías instalado de antes, ese doble clic **no vuelve a instalar Laya**: si estaba, se queda puesto.
 
 **❌ Si algo sale mal aquí:**
 - *Dice "Python 3.11 or newer is required"* → el mensaje incluye **el comando para tu sistema** (zypper en openSUSE, apt en Debian/Ubuntu, dnf en Fedora, pacman en Arch); instálalo y repite

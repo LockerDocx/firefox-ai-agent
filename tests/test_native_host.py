@@ -344,9 +344,18 @@ def test_the_extension_still_works_when_native_messaging_is_not_registered():
     assert re.search(r"if \(!nativeUnavailable && \(await tryNative\(\)\)\) return;", background)
 
 
-def test_the_starters_register_the_host_they_just_installed():
+def test_a_double_click_leaves_the_host_registered_with_firefox():
+    """The guarantee is the same; since 0.12.6 it lives in the installer the starters call.
+
+    The starters no longer run jev-register-host themselves - that made every double-click register
+    again, and a machine that was already registered could not tell. `scripts/install.py` decides
+    whether Firefox needs telling (`register` step) and reports the outcome.
+    """
+    installer = (ROOT / "scripts" / "install.py").read_text(encoding="utf-8")
+    assert "jev-register-host" in installer, "nothing registers the host any more"
     for name in ("start-host.sh", "start-host.command", "start-host.bat"):
-        assert "jev-register-host" in (ROOT / name).read_text(encoding="utf-8"), f"{name} never registers the host"
+        text = (ROOT / name).read_text(encoding="utf-8").replace("\\", "/")
+        assert "scripts/install.py" in text, f"{name} never reaches the installer"
 
 
 def test_the_console_scripts_are_declared():

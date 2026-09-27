@@ -15,6 +15,54 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.6] — 2026-09-27
+
+The double-click now **checks the installation instead of assuming it**. Until now the starters asked one
+question — "does `.venv` exist?" — and if the answer was yes they never looked again, so a machine stayed
+frozen on the first version it installed, an environment built by an older Python kept being used, and a
+half-finished install looked exactly like a finished one.
+
+### Added
+
+- **`scripts/install.py`, the smart installer.** It reads what is really there (version in the
+  environment, the Python it was built by, whether the interpreter still starts, whether the command
+  files exist, whether Laya is in it, what Firefox was told) and then either reuses it — printing
+  `nothing downloaded` — or **removes it and installs this copy**. No patching on top of an old install.
+  `--check` reports without changing anything, `--dry-run` prints the plan, `--reinstall` forces a clean
+  install, `--quiet` only speaks when there is work to do.
+- **Your data is never part of "the installation".** `.env` (keys), `artifacts/` (run history and
+  recordings), `workspace/` (files the agent made), `.git/` and the extension are named in a
+  `NEVER_REMOVE` guard that refuses to delete them even if a plan asks for it, and anything outside the
+  project folder is refused outright. The final line of every run says it: *"Your keys (.env), your run
+  history (artifacts/) and your workspace files were not touched."*
+- **Laya is never installed twice.** If the environment being replaced had Laya, the package goes back
+  into the new one — its 644 MB of weights are already in the shared cache, so nothing large is
+  downloaded — and the install is recorded in `laya-install.json`, which is the file the agent itself
+  reads before installing Laya on the first start. If Laya was not there, the installer stays out of it
+  and says who will take care of it.
+- **A broken environment is repaired instead of crashing.** A previous install can leave `.venv` behind
+  with an interpreter that no longer starts (Python removed, folder moved, half-deleted install). The
+  installer runs it to find out; if it cannot start, the environment is rebuilt. Found by running the
+  installer for real, not by reading it.
+- **Firefox is registered once, not on every start.** The check reads the native-messaging manifest file
+  and the installed package, so a machine that is already registered is left alone, and one that points
+  at another copy of the agent is taken over with the reason printed.
+
+### Changed
+
+- **The three starters (`start-host.sh`, `.command`, `.bat`) hand the whole job to the installer.** No
+  second copy of the logic, no `pip` calls in the shell scripts, no separate registration step: one
+  place decides and one place reports. The interpreter they found is still the one that builds `.venv`.
+- **The docs stop promising things the scripts do not do.** The walkthrough now shows the message the
+  starter really prints, the update section says the previous installation is removed rather than
+  patched, and both mention that a double-click on an up-to-date folder downloads nothing.
+
+### Tests
+
+- `tests/test_install.py`: 46 tests over the decisions (create / reuse / rebuild, with the reason),
+  the never-remove guard, Laya remembered, `--check` and `--dry-run` writing nothing, the CPU-only torch
+  index, the registration rules, and the starters no longer installing anything themselves.
+
 ## [0.12.5] — 2026-09-27
 
 Nothing that used `z-ai/glm-5.3` still does — including installs that already exist.
