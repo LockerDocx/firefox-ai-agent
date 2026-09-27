@@ -39,6 +39,11 @@ on:
         description: "The reasoning setting to send (none, low, high...)"
         required: false
         default: "none"
+      catalogue:
+        description: "Just print all catalogue ids from provider"
+        type: boolean
+        required: false
+        default: false
   push:
     paths:
       - ".github/workflows/probe-models.yml"
