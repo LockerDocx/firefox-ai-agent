@@ -183,17 +183,24 @@ def median(values):
 
 
 def show(rows, patterns):
-    head = f"| {'model':46} | {'plan ms':>8} | {'plan ok':>7} | {'routing ms':>10} | {'routing':>9} | {'text ms':>8} | {'exact':>5} |"
-    print(head)
-    print("|" + "-" * 48 + "|" + "-" * 10 + "|" + "-" * 9 + "|" + "-" * 12 + "|" + "-" * 11 + "|" + "-" * 10 + "|" + "-" * 7 + "|")
+    """The table, one row per model, widest column first so a long id does not shift the rest."""
+    columns = (
+        (46, "model"), (8, "plan ms"), (7, "plan ok"), (10, "routing ms"), (9, "routing"), (8, "text ms"), (5, "exact"),
+    )
+    print("|" + "|".join(f" {title:>{width}} " for width, title in columns) + "|")
+    print("|" + "|".join("-" * (width + 2) for width, _ in columns) + "|")
     for row in rows:
         planner, policy, text = row["planner"], row["policy"], row["text"]
-        print(
-            f"| {row['model']:46} | {show_ms(planner and planner['ms']):>8} | "
-            f"{show_ratio(planner, 'valid', 'total'):>7} | {show_ms(policy and policy['ms']):>10} | "
-            f"{show_ratio(policy, 'hits', 'scored'):>9} | {show_ms(text and text['ms']):>8} | "
-            f"{show_ratio(text, 'exact', 'total'):>5} |"
+        cells = (
+            (46, row["model"]),
+            (8, show_ms(planner and planner["ms"])),
+            (7, show_ratio(planner, "valid", "total")),
+            (10, show_ms(policy and policy["ms"])),
+            (9, show_ratio(policy, "hits", "scored")),
+            (8, show_ms(text and text["ms"])),
+            (5, show_ratio(text, "exact", "total")),
         )
+        print("|" + "|".join(f" {value:>{width}} " for width, value in cells) + "|")
     if patterns:
         print(f"\n(pattern: {', '.join(patterns)})")
 
