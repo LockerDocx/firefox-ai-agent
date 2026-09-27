@@ -105,12 +105,13 @@ The derivation above already does this for you when only that key is present; to
 
 ```bash
 PLANNER_PROVIDER=nvidia
-PLANNER_MODEL=z-ai/glm-5.3
+PLANNER_MODEL=z-ai/glm-5.3-flash
 POLICY_PROVIDER=nvidia
-POLICY_MODEL=openai/gpt-oss-20b
-POLICY_REASONING=low
+POLICY_MODEL=z-ai/glm-5.3-flash
 TEXT_MODEL_PROVIDER=nvidia
-TEXT_MODEL=openai/gpt-oss-20b
+TEXT_MODEL=z-ai/glm-5.3-flash
+# thinking is off by default; name another model here for any role
+# (z-ai/glm-5.3 measured 1.9 s per executor step against 37.4 s)
 NVIDIA_API_KEY=nvapi-...
 ```
 

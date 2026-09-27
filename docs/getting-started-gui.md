@@ -58,7 +58,8 @@ used"*) with the reason, so a key that is idle cannot be mistaken for a broken s
 Pressing **Save** writes `NVIDIA_API_KEY` to `.env`, exports it immediately and re-tests every role, so
 the panel goes straight to `Ready — planner … · policy …`. No restart, no file editing; the key is
 never sent anywhere except the provider you chose. Paste a second key later (the **🔑 API keys**
-button in *Models & parameters*) to upgrade the planner to `z-ai/glm-5.3`. (Prefer editing files?
+button in *Models & parameters*) to put another model in any role — the full-size `z-ai/glm-5.3` measured
+1.9 s per executor step against 37.4 s for the `-flash` default. (Prefer editing files?
 Copy `.env.example` to `.env` and fill in the lines you want — both paths are equivalent.)
 
 Every option is described in [providers.md](providers.md), and to change what runs, use the **Models & parameters** panel in the sidebar.

@@ -49,7 +49,7 @@ Si algo falla, mira la tabla de [problemas comunes](#-problemas-comunes) al fina
 
 ## 🟦 PASO 2 — Conseguir tu clave API gratuita (2 minutos)
 
-La clave es como una contraseña para que el asistente use una IA. Se consigue en **NVIDIA** (gratis) y **esa sola clave hace funcionar los tres papeles** del agente con el modelo `z-ai/glm-5.3`:
+La clave es como una contraseña para que el asistente use una IA. Se consigue en **NVIDIA** (gratis) y **esa sola clave hace funcionar los tres papeles** del agente con el modelo `z-ai/glm-5.3-flash` (sin razonamiento):
 
 1. Abre **https://build.nvidia.com** → *Login* (puedes crear la cuenta con Google)
 2. Icono de tu perfil → **API Keys** → **Generate API Key**
@@ -235,9 +235,10 @@ Laya es un motor de decisión **gratis, de código abierto y 100 % local** (de C
 | Veo esto… | Solución |
 |---|---|
 | El puntito del panel está **rojo "offline"** | Firefox no arrancó el agente: haz **doble clic en el starter** (PASO 3) y deja esa ventana abierta → todo sigue funcionando igual. Si acabas de mover la carpeta del proyecto, ese doble clic también la vuelve a registrar. En Firefox *snap*/*Flatpak* el sistema puede pedir permiso la primera vez (o denegarlo): con la ventana abierta va igual |
-| **Planner o Text writer en 🔴 con error 404 / "not found"** | El id del modelo estaba mal en versiones anteriores (`zai/glm-5.3` en vez de `z-ai/glm-5.3`). **Los starters nuevos lo corrigen solos** al arrancar (verás "Fixed an outdated model id") — o edita `.env` a mano: cambia `zai/` por `z-ai/` en las líneas PLANNER_MODEL y TEXT_MODEL |
+| **Planner o Text writer en 🔴 con error 404 / "not found"** | El id del modelo estaba mal en versiones anteriores (`zai/glm-5.3` en vez de `z-ai/…`). **El starter nuevo lo arregla solo** al arrancar: corrige el id **y** pasa el modelo al que envía esta versión (`z-ai/glm-5.3-flash`), con copia en `.env.bak`. Para conservar el modelo grande a propósito: `JEV_KEEP_MODEL=1` |
 | **🔴 con error 401/403 "Authorization failed"** | El proveedor **rechazó tu clave** (mal pegada, incompleta o revocada). Genera una nueva (Groq en **console.groq.com/keys**, NVIDIA en **build.nvidia.com** → perfil → *API Keys*) y **pégala en el propio panel**: botón **🔑 API keys** → Save. Se guarda y se aplica al momento, sin reiniciar nada |
 | Un modelo está en **🔴 en el panel** | Pulsa **"Test setup"** y lee el mensaje exacto: `401/403` = clave mal pegada → pégala otra vez con **🔑 API keys**; `404` o `not found` = ese nombre de modelo no existe en el proveedor → elige otro en el desplegable del panel **⚙️ Models & parameters** |
+| **¿Por qué el panel ya no dice `glm-5.3`?** | Porque el agente ahora usa `z-ai/glm-5.3-flash` sin razonamiento en los tres papeles (`z-ai/glm-5.3-flash` planifica, decide y escribe). Si tenías el modelo antiguo fijado a mano, el starter lo migra al arrancar; `JEV_KEEP_MODEL=1` lo deja como estaba |
 | Sale un **error rojo en el panel** al pulsar Run | Léelo: ahora incluye la causa real (`HTTP 401: invalid key`, `HTTP 404: model ... does not exist`...). Cada caso está en esta tabla |
 | No encuentro `manifest.json` al cargar el add-on | Está DENTRO de la carpeta `extension` del proyecto (PASO 4, punto 4) |
 | Reinicié Firefox y el add-on desapareció | Normal, es "temporal" → repite el PASO 4 |

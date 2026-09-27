@@ -34,7 +34,7 @@ jobs:
         env:
           # Deliberately NO provider/model configuration: this check tests the same
           # zero-config path a new user gets. With these two keys the agent must derive
-          # planner -> nvidia:z-ai/glm-5.3 and executor/text -> groq:openai/gpt-oss-20b
+          # one NVIDIA key -> all three roles on nvidia:z-ai/glm-5.3-flash, thinking off
           # (providers.DERIVED_MODELS), which is the measured-best arrangement. If the
           # derivation ever picks something else, the report shows it here.
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}

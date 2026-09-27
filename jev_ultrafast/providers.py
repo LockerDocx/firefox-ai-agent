@@ -260,8 +260,10 @@ def _is_loopback_url(base_url):
 # Measured on NVIDIA, two independent runs of the same prompts (scripts/bench_profiles.py):
 #   z-ai/glm-5.3        executor 2.3 s and 5.2 s median (n=12 each), text 1.6 s and 98 s
 #   openai/gpt-oss-20b  executor 36 s and 45 s median (n=11-12), worst 180 s
-# so the executor and the text writer default to glm-5.3 on that provider: 10x faster on the
-# role that is called on every step, at the same measured quality (routing 12/12, 0 dangerous).
+# glm-5.3 measured 10x faster than gpt-oss-20b on the role called at every step, at the same
+# measured quality (routing 12/12, 0 dangerous) — and glm-5.3-flash, which is what ships now,
+# measured slower than both because the free tier's queue is the cost, not the parameters.
+# The model is the user's explicit choice: one line per role moves it.
 DERIVED_MODELS = {
     "nvidia": {
         "planner": "z-ai/glm-5.3-flash",
@@ -373,7 +375,8 @@ No API key found. One free key runs the whole agent:
   3. Paste it in the agent sidebar in Firefox (it asks on first open), or here
      when this starter asks, or in .env as NVIDIA_API_KEY=... and run again.
 
-That one key runs the planner, the executor and the text helper (z-ai/glm-5.3).
+That one key runs the planner, the executor and the text helper (z-ai/glm-5.3-flash,
+thinking off).
 A Groq key (https://console.groq.com/keys) is optional: faster per call, but its
 free tier is 8 000 tokens per minute and a long mission spends that mid-run.
 """.strip()

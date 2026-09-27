@@ -349,9 +349,40 @@ def save_config(config):
     CONFIG_PATH.write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
+# The model that used to be derived for every cloud role, and the one that replaced it on
+# 2026-09-27. A saved selection still pointing at the old one is moved once, with the reason
+# kept in the file; JEV_KEEP_MODEL=1 leaves it alone for anyone who wants it back.
+OLD_DEFAULT_MODEL = "z-ai/glm-5.3"
+NEW_DEFAULT_MODEL = "z-ai/glm-5.3-flash"
+
+
+def migrate_old_default_model(config=None):
+    """Move a saved selection still on the old default to the shipped one. Returns the roles moved.
+
+    Only the exact old id, and only for NVIDIA: anything else a user typed is their choice and is
+    left untouched. The panel can put it back in two clicks, and `JEV_KEEP_MODEL=1` skips this.
+    """
+    if (os.environ.get("JEV_KEEP_MODEL") or "").strip().lower() in {"1", "on", "yes", "true"}:
+        return []
+    config = load_config() if config is None else config
+    moved = []
+    for role, selection in (config.get("models") or {}).items():
+        if not isinstance(selection, dict):
+            continue
+        if selection.get("provider") == "nvidia" and selection.get("model") == OLD_DEFAULT_MODEL:
+            selection["model"] = NEW_DEFAULT_MODEL
+            moved.append(role)
+    if moved:
+        config["models_migrated_from"] = OLD_DEFAULT_MODEL
+        save_config(config)
+    return sorted(moved)
+
+
 def apply_saved_config():
     """Re-apply the persisted model/parameter selection over the .env defaults."""
     config = load_config()
+    if migrate_old_default_model(config):
+        config = load_config()  # the migration rewrote the file; apply what it left
     for role, selection in (config.get("models") or {}).items():
         if role in ROLE_MODEL_ENV and isinstance(selection, dict):
             provider_name = selection.get("provider")

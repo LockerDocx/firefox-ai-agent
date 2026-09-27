@@ -115,18 +115,24 @@ def test_apply_model_switches_provider_and_model():
 
 
 def test_apply_saved_config_overrides_env_defaults():
+    """What the user picked in the panel survives a restart.
+
+    The model here is deliberately not the old shipped default: that exact pair is migrated to
+    the new default on purpose (see tests/test_flash_everywhere.py), so using it would test the
+    migration instead of the persistence this test is about.
+    """
     import os
 
-    parameters.apply_model("planner", "nvidia", "z-ai/glm-5.3")
+    parameters.apply_model("planner", "nvidia", "openai/gpt-oss-20b")
     parameters.apply_params("planner", {"reasoning": "medium"})
     # simulate a restart: env back to .env defaults, config file kept
     for name in ("PLANNER_PROVIDER", "PLANNER_MODEL", "PLANNER_REASONING"):
         os.environ.pop(name, None)
     os.environ["PLANNER_PROVIDER"] = "groq"
-    os.environ["PLANNER_MODEL"] = "openai/gpt-oss-20b"
+    os.environ["PLANNER_MODEL"] = "openai/gpt-oss-120b"
     parameters.apply_saved_config()
     assert os.environ["PLANNER_PROVIDER"] == "nvidia"
-    assert os.environ["PLANNER_MODEL"] == "z-ai/glm-5.3"
+    assert os.environ["PLANNER_MODEL"] == "openai/gpt-oss-20b"
     assert os.environ["PLANNER_REASONING"] == "medium"
 
 

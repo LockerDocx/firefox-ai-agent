@@ -97,10 +97,14 @@ if [ ! -d ".venv" ]; then
   fi
 fi
 
-# Earlier templates shipped a wrong NVIDIA model id (zai/ instead of z-ai/): fix it in place.
-if [ -f ".env" ] && grep -q "zai/glm-5.3" .env; then
-  sed -i.bak 's|zai/glm-5\.3|z-ai/glm-5.3|g' .env
-  echo "Fixed an outdated model id in .env (zai/ -> z-ai/). Backup saved as .env.bak"
+# Two lines in .env can pin the model that the agent used to derive: the wrong id some old
+# templates shipped (zai/glm-5.3) and the model itself (z-ai/glm-5.3). Both move to the model
+# this version ships, z-ai/glm-5.3-flash, and the change is printed. JEV_KEEP_MODEL=1 skips it
+# for anyone who deliberately wants the full-size model.
+if [ -f ".env" ] && [ "${JEV_KEEP_MODEL:-0}" != "1" ] && grep -qE "^[A-Z_]*MODEL=(zai|z-ai)/glm-5\.3[[:space:]]*$" .env; then
+  sed -i.bak -E 's#^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3[[:space:]]*$#\1z-ai/glm-5.3-flash#' .env
+  echo "Updated the pinned model in .env to z-ai/glm-5.3-flash (thinking off is already the default)."
+  echo "Backup saved as .env.bak. Keep the old model with JEV_KEEP_MODEL=1."
 fi
 
 if [ ! -f ".env" ]; then

@@ -14,7 +14,8 @@ provider billed, so a slow-but-cheap model and a fast-but-expensive one are
 comparable on the same table. Costs are only printed when you supply prices
 (``--prices prices.json``), because an invented price is worse than no price:
 
-    {"nvidia:z-ai/glm-5.3": {"input": 0.0, "output": 0.0},
+    {"nvidia:z-ai/glm-5.3-flash": {"input": 0.0, "output": 0.0},
+     "nvidia:z-ai/glm-5.3": {"input": 0.0, "output": 0.0},
      "groq:openai/gpt-oss-20b": {"input": 0.15, "output": 0.75}}
 
 Usage:

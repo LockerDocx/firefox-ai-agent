@@ -45,11 +45,14 @@ if not exist ".venv" (
   )
 )
 
-rem Earlier templates shipped a wrong NVIDIA model id (zai/ instead of z-ai/): fix it in place.
+rem Two lines in .env can pin the model the agent used to derive: the wrong id old templates
+rem shipped (zai/glm-5.3) and the model itself (z-ai/glm-5.3). Both move to the one this version
+rem ships, z-ai/glm-5.3-flash. JEV_KEEP_MODEL=1 skips this for anyone who wants the full-size model.
 if exist ".env" (
-  findstr /C:"zai/glm-5.3" ".env" >nul 2>nul && (
-    powershell -NoProfile -Command "(Get-Content .env) -replace 'zai/glm-5.3','z-ai/glm-5.3' | Set-Content .env" >nul 2>nul
-    echo  Fixed an outdated model id in .env ^(zai/ -^> z-ai/^).
+  findstr /R /C:"^[A-Z_]*MODEL=zai/glm-5.3" /C:"^[A-Z_]*MODEL=z-ai/glm-5.3" ".env" >nul 2>nul && (
+    copy /y ".env" ".env.bak" >nul 2>nul
+    powershell -NoProfile -Command "if ($env:JEV_KEEP_MODEL -ne '1') { (Get-Content .env) -replace '^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3\s*$','${1}z-ai/glm-5.3-flash' | Set-Content .env }" >nul 2>nul
+    echo  Updated the pinned model in .env to z-ai/glm-5.3-flash ^(backup: .env.bak^).
   )
 )
 

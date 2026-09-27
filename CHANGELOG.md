@@ -15,6 +15,34 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.5] — 2026-09-27
+
+Nothing that used `z-ai/glm-5.3` still does — including installs that already exist.
+
+### Changed
+
+- **The whole repository was grepped, not the obvious file.** What still pointed at the old model:
+  the *no key* help text, the CI job that runs a live mission (`e2e-flights.yml`), a comment in the
+  provider check, the price-table example, and the docs.
+- **An install that already exists is moved too, in both places a model can be pinned.** The
+  starter now moves the line in `.env` (the same step that fixed the wrong `zai/` id) to
+  `z-ai/glm-5.3-flash`, keeps `.env.bak`, and `JEV_KEEP_MODEL=1` opts out. A selection saved by the
+  panel is migrated once, the reason is recorded in the config file (`models_migrated_from`), and
+  only the exact old pair on NVIDIA is touched — any other model the user chose is left alone.
+  Twelve tests pin all of it (`tests/test_flash_everywhere.py`).
+
+- **The live end-to-end job runs the shipped model too** (`e2e-flights.yml` plans on
+  `z-ai/glm-5.3-flash`), so the workflow that drives a real browser with a real key cannot quietly
+  keep testing another model.
+- The *no key* help text, the provider-check comment, the price-table example and the docs name the
+  model that actually runs.
+
+### Kept on purpose
+
+Historical measurements and the comparison profiles still mention `z-ai/glm-5.3` — a measurement
+that names the model it measured is not a residue, it is the evidence. `scripts/bench_profiles.py`
+keeps `nvidia-big-none` and `nvidia-hybrid` for exactly that comparison.
+
 ## [0.12.4] — 2026-09-27
 
 Every cloud role moves to `z-ai/glm-5.3-flash` with thinking off, on the user's explicit instruction.
