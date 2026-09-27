@@ -15,6 +15,12 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.8] — 2026-09-27
+
+### Fixed
+
+- **Planner Navigation Rule.** Explicitly instructs the planning prompt that missions requesting a specific website, domain or URL (e.g., `"go, and open any game of friv.com"`) must make step 1 `"Navigate to <url>"`. This fixes the bug where the planner generated on-page search steps (like `"Click 'Explore' in the header"`) on DuckDuckGo and got stuck in DuckDuckGo link loops.
+
 ## [0.12.7] — 2026-09-27
 
 ### Changed

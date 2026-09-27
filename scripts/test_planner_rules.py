@@ -16,8 +16,8 @@ Reply with ONLY one JSON object, no markdown and no extra text:
 {"steps": ["...", "..."]}
 
 Rules:
-- 1 to 12 steps; each step is one concrete browser interaction (navigate, click, type, select, scroll) or a verification.
-- If the mission asks to visit or open a specific website, domain or URL (e.g. 'friv.com', 'open amazon.com'), the FIRST step MUST be 'Navigate to <url>' or 'Open <url>'.
+- 1 to 12 steps; each step is one concrete browser interaction (navigate, click, type, select, scroll) or a test.
+- If the mission asks to visit a website/URL (e.g. 'open friv.com'), step 1 MUST be 'Navigate to <url>'.
 - Reference elements by their visible meaning (labels, field names), never selectors or code.
 - Include values explicitly, e.g. 'Type "Zurich" into Where from?'.
 - After typing into a field with autocomplete, make selecting the suggestion its own step.
@@ -41,9 +41,9 @@ models = [
 ]
 
 for mission in missions:
-    print(f"==================================================")
+    print("==================================================")
     print(f" Mission: {mission!r}")
-    print(f"==================================================")
+    print("==================================================")
     for model_id, params in models:
         body = {
             "model": model_id,

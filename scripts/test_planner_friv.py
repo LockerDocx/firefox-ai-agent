@@ -11,7 +11,7 @@ if not KEY:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from jev_ultrafast.questions import PLANNER_SYSTEM
+from jev_ultrafast.questions import PLANNER_SYSTEM  # noqa: E402
 
 url = "https://integrate.api.nvidia.com/v1/chat/completions"
 

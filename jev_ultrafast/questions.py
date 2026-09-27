@@ -58,7 +58,8 @@ Reply with ONLY one JSON object, no markdown and no extra text:
 {"steps": ["...", "..."]}
 
 Rules:
-- 1 to 12 steps; each step is one concrete browser interaction (click, type, select, scroll) or a verification.
+- 1 to 12 steps; each step is one concrete browser interaction (navigate, click, type, select, scroll) or a test.
+- If the mission asks to visit a website/URL (e.g. 'open friv.com'), step 1 MUST be 'Navigate to <url>'.
 - Reference elements by their visible meaning (labels, field names), never selectors or code.
 - Include values explicitly, e.g. 'Type "Zurich" into Where from?'.
 - After typing into a field with autocomplete, make selecting the suggestion its own step.
