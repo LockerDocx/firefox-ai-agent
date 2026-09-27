@@ -100,9 +100,9 @@ fi
 # templates shipped (zai/glm-5.3) and the model itself (z-ai/glm-5.3). Both move to the model
 # this version ships, z-ai/glm-5.3-flash, and the change is printed. JEV_KEEP_MODEL=1 skips it
 # for anyone who deliberately wants the full-size model.
-if [ -f ".env" ] && [ "${JEV_KEEP_MODEL:-0}" != "1" ] && grep -qE "^[A-Z_]*MODEL=(zai|z-ai)/glm-5\.3[[:space:]]*$" .env; then
-  sed -i.bak -E 's#^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3[[:space:]]*$#\1z-ai/glm-5.3-flash#' .env
-  echo "Updated the pinned model in .env to z-ai/glm-5.3-flash (thinking off is already the default)."
+if [ -f ".env" ] && [ "${JEV_KEEP_MODEL:-0}" != "1" ] && grep -qE "^[A-Z_]*MODEL=(zai|z-ai)/glm-5\.3(-flash)?[[:space:]]*$" .env; then
+  sed -i.bak -E 's#^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3(-flash)?[[:space:]]*$#\1meta/llama-3.2-11b-vision-instruct#' .env
+  echo "Updated the pinned model in .env to meta/llama-3.2-11b-vision-instruct."
   echo "Backup saved as .env.bak. Keep the old model with JEV_KEEP_MODEL=1."
 fi
 

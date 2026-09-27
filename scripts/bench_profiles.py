@@ -50,11 +50,11 @@ from scripts.routing_cases import ROUTING_CASES  # noqa: E402
 # model answers straight away (schemas.reasoning_body). "default" leaves the setting alone.
 PROFILES = {
     "nvidia-current": {
-        "note": "what one NVIDIA key derives today: glm-5.3-flash everywhere, thinking off",
+        "note": "what one NVIDIA key derives today: meta/llama-3.2-11b-vision-instruct everywhere",
         "roles": {
-            "planner": ("nvidia", "z-ai/glm-5.3-flash", "none"),
-            "policy": ("nvidia", "z-ai/glm-5.3-flash", "none"),
-            "text": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+            "planner": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
+            "policy": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
+            "text": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
         },
     },
     "nvidia-big-none": {
@@ -66,11 +66,11 @@ PROFILES = {
         },
     },
     "nvidia-flash-none": {
-        "note": "the proposal: glm-5.3 flash everywhere, thinking off",
+        "note": "the proposal: meta/llama-3.2-11b-vision-instruct everywhere",
         "roles": {
-            "planner": ("nvidia", "z-ai/glm-5.3-flash", "none"),
-            "policy": ("nvidia", "z-ai/glm-5.3-flash", "none"),
-            "text": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+            "planner": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
+            "policy": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
+            "text": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
         },
     },
     "nvidia-flash-low": {
@@ -90,11 +90,11 @@ PROFILES = {
         },
     },
     "nvidia-hybrid": {
-        "note": "big model plans, flash executes without thinking",
+        "note": "big model plans, llama vision executes",
         "roles": {
             "planner": ("nvidia", "z-ai/glm-5.3", "default"),
-            "policy": ("nvidia", "z-ai/glm-5.3-flash", "none"),
-            "text": ("nvidia", "z-ai/glm-5.3-flash", "none"),
+            "policy": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
+            "text": ("nvidia", "meta/llama-3.2-11b-vision-instruct", "none"),
         },
     },
     "groq-reference": {

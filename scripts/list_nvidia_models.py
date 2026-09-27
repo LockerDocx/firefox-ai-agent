@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import time
 import urllib.request
 
 KEY = os.environ.get("NVIDIA_API_KEY", "")

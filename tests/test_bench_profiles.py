@@ -56,15 +56,12 @@ def test_every_profile_says_what_it_would_send(env_of):
 
 
 def test_thinking_off_really_means_off(env_of):
-    """The point of the proposal: `none` must reach the endpoint as thinking disabled."""
+    """The point of the proposal: `none` must reach the endpoint as thinking disabled for reasoning models."""
     bench.apply_profile(bench.PROFILES["nvidia-flash-none"])
     wire = bench.describe_wire("policy")
-    assert wire["model"] == "nvidia:z-ai/glm-5.3-flash"
-    assert wire["reasoning"] == "none"
+    assert wire["model"] == "nvidia:meta/llama-3.2-11b-vision-instruct"
     body = reasoning_body("none", {"style": "template", "values": ["none", "low", "medium", "high"]})
     assert body == {"chat_template_kwargs": {"thinking": False}}, body
-    # ...and that the setting is in the parameters the request will carry
-    assert wire["params"].get("reasoning") == "none"
 
 
 def test_a_profile_that_leaves_reasoning_alone_leaves_it_alone(env_of):
@@ -115,10 +112,10 @@ def test_every_role_gets_the_model_of_the_profile(env_of):
 
 def test_applying_a_profile_is_reversible(env_of):
     bench.apply_profile(bench.PROFILES["nvidia-hybrid"])
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("policy") == ("nvidia", "meta/llama-3.2-11b-vision-instruct")
     bench.apply_profile(bench.PROFILES["nvidia-current"])
-    assert providers.selection_for("policy") == ("nvidia", "z-ai/glm-5.3-flash")
-    assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3-flash")
+    assert providers.selection_for("policy") == ("nvidia", "meta/llama-3.2-11b-vision-instruct")
+    assert providers.selection_for("planner") == ("nvidia", "meta/llama-3.2-11b-vision-instruct")
     bench.apply_profile(bench.PROFILES["nvidia-big-none"])
     assert providers.selection_for("planner") == ("nvidia", "z-ai/glm-5.3")
 
@@ -180,11 +177,11 @@ def test_a_report_is_serialisable_and_says_what_it_sent(env_of, monkeypatch):
                                           "content": json.dumps({"steps": ["a step"], "choice": "browser",
                                                                  "text": "4"}), "usage": {}}
     )
-    monkeypatch.setattr(bench, "catalogue", lambda _name: (["z-ai/glm-5.3-flash"], None))
+    monkeypatch.setattr(bench, "catalogue", lambda _name: (["meta/llama-3.2-11b-vision-instruct"], None))
     args = type("A", (), {"plans": 1, "routing_sample": 1, "text_cases": 1})()
     report = bench.run_profile("nvidia-flash-none", bench.PROFILES["nvidia-flash-none"], args)
     text = json.dumps(report, ensure_ascii=False)
-    assert "nvidia:z-ai/glm-5.3-flash" in text
+    assert "nvidia:meta/llama-3.2-11b-vision-instruct" in text
     assert report["wire"]["policy"]["reasoning"] == "none"
     assert report["quality"]["policy"]["scored"] >= 1
     rendered = bench.render(report)

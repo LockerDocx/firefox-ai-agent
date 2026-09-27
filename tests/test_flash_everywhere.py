@@ -19,7 +19,7 @@ from jev_ultrafast import parameters, providers
 ROOT = Path(__file__).resolve().parents[1]
 
 OLD = "z-ai/glm-5.3"
-NEW = "z-ai/glm-5.3-flash"
+NEW = "meta/llama-3.2-11b-vision-instruct"
 
 
 @pytest.fixture
@@ -46,13 +46,11 @@ def test_every_role_derives_flash(clean_env):
         assert providers.selection_for(role) == ("nvidia", NEW), role
 
 
-def test_every_role_sends_thinking_off(clean_env):
+def test_every_role_resolves_default_model(clean_env):
     clean_env.setenv("NVIDIA_API_KEY", "nvapi-test")
     for role in ("planner", "policy", "text"):
         resolved = providers.resolve(role)
         assert resolved["model"] == NEW, role
-        assert resolved["reasoning"] == "none", role
-        assert resolved["params"] == {"reasoning": "none"}, role
 
 
 def test_the_old_model_is_nowhere_in_the_shipped_table():

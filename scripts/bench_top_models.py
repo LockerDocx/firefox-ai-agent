@@ -12,10 +12,10 @@ if not KEY:
 # Add repo to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from jev_ultrafast import providers
-from jev_ultrafast.questions import PLANNER_SYSTEM, TEXT_VALUE
-from scripts.bench_routing import ROUTING_SYSTEM
-from scripts.routing_cases import ROUTING_CASES
+from jev_ultrafast import providers  # noqa: E402
+from jev_ultrafast.questions import TEXT_VALUE  # noqa: E402
+from scripts.bench_routing import ROUTING_SYSTEM  # noqa: E402
+from scripts.routing_cases import ROUTING_CASES  # noqa: E402
 
 CANDIDATE_MODELS = [
     ("google/gemma-4-31b-it", "Google Gemma 4 31B IT"),
@@ -24,9 +24,9 @@ CANDIDATE_MODELS = [
 ]
 
 def benchmark_model(model_id, display_name):
-    print(f"==================================================")
+    print("==================================================")
     print(f" Benchmarking {display_name} ({model_id})")
-    print(f"==================================================")
+    print("==================================================")
     
     url = "https://integrate.api.nvidia.com/v1/chat/completions"
     
@@ -55,14 +55,18 @@ def benchmark_model(model_id, display_name):
             
         t0 = time.perf_counter()
         try:
-            req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Authorization": f"Bearer {KEY}", "Content-Type": "application/json"})
+            req = urllib.request.Request(
+                url, data=json.dumps(body).encode(),
+                headers={"Authorization": f"Bearer {KEY}", "Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=15) as res:
                 ms = round((time.perf_counter() - t0) * 1000)
                 text_latencies.append(ms)
                 raw = json.loads(res.read().decode())["choices"][0]["message"]["content"]
                 val = providers.extract_json(raw).get("text", "")
                 is_exact = (str(val).strip() == expected)
-                if is_exact: text_exact += 1
+                if is_exact:
+                    text_exact += 1
                 print(f"  [{ms:4} ms] {field:20} -> got {val!r} (expected {expected!r}) {'✓' if is_exact else '✗'}")
         except Exception as e:
             ms = round((time.perf_counter() - t0) * 1000)
@@ -89,15 +93,20 @@ def benchmark_model(model_id, display_name):
             
         t0 = time.perf_counter()
         try:
-            req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Authorization": f"Bearer {KEY}", "Content-Type": "application/json"})
+            req = urllib.request.Request(
+                url, data=json.dumps(body).encode(),
+                headers={"Authorization": f"Bearer {KEY}", "Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=15) as res:
                 ms = round((time.perf_counter() - t0) * 1000)
                 routing_latencies.append(ms)
                 raw = json.loads(res.read().decode())["choices"][0]["message"]["content"]
                 ans = providers.extract_json(raw).get("choice")
                 is_hit = (ans == case["expected"])
-                if is_hit: routing_hits += 1
-                print(f"  [{ms:4} ms] {case['mission'][:40]:42} -> got {ans!r} (expected {case['expected']!r}) {'✓' if is_hit else '✗'}")
+                if is_hit:
+                    routing_hits += 1
+                symbol = '✓' if is_hit else '✗'
+                print(f"  [{ms:4} ms] {case['mission'][:35]:37} -> got {ans!r} {symbol}")
         except Exception as e:
             ms = round((time.perf_counter() - t0) * 1000)
             print(f"  [{ms:4} ms] {case['mission'][:40]:42} -> ERROR: {e}")

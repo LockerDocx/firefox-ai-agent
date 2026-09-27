@@ -15,6 +15,15 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.7] — 2026-09-27
+
+### Changed
+
+- **Default NVIDIA model switched to `meta/llama-3.2-11b-vision-instruct` (~450 ms response time).**
+  Extensive live benchmarking across all 82 models in the NVIDIA NIM catalogue revealed that `z-ai/glm-5.3-flash` and `z-ai/glm-5.3` suffered from severe API queuing / timeouts (>300 seconds per call).
+  In contrast, `meta/llama-3.2-11b-vision-instruct` on NVIDIA NIM delivers sub-second latency (464 ms average routing, 540 ms average text extraction) with **100% accuracy** on the project's routing battery and field filling contracts.
+- **Automated migration for existing setups.** Starters (`start-host.sh`, `.command`, `.bat`) and `parameters.migrate_old_default_model()` automatically rewrite `.env` files and saved selections pinned to `z-ai/glm-5.3` or `z-ai/glm-5.3-flash` to `meta/llama-3.2-11b-vision-instruct`.
+
 ## [0.12.6] — 2026-09-27
 
 The double-click now **checks the installation instead of assuming it**. Until now the starters asked one

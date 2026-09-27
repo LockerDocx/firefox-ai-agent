@@ -352,8 +352,8 @@ def save_config(config):
 # The model that used to be derived for every cloud role, and the one that replaced it on
 # 2026-09-27. A saved selection still pointing at the old one is moved once, with the reason
 # kept in the file; JEV_KEEP_MODEL=1 leaves it alone for anyone who wants it back.
-OLD_DEFAULT_MODEL = "z-ai/glm-5.3"
-NEW_DEFAULT_MODEL = "z-ai/glm-5.3-flash"
+OLD_DEFAULT_MODELS = {"z-ai/glm-5.3", "z-ai/glm-5.3-flash"}
+NEW_DEFAULT_MODEL = "meta/llama-3.2-11b-vision-instruct"
 
 
 def migrate_old_default_model(config=None):
@@ -369,11 +369,10 @@ def migrate_old_default_model(config=None):
     for role, selection in (config.get("models") or {}).items():
         if not isinstance(selection, dict):
             continue
-        if selection.get("provider") == "nvidia" and selection.get("model") == OLD_DEFAULT_MODEL:
+        if selection.get("provider") == "nvidia" and selection.get("model") in OLD_DEFAULT_MODELS:
+            config["models_migrated_from"] = selection.get("model")
             selection["model"] = NEW_DEFAULT_MODEL
             moved.append(role)
-    if moved:
-        config["models_migrated_from"] = OLD_DEFAULT_MODEL
         save_config(config)
     return sorted(moved)
 

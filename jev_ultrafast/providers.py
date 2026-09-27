@@ -266,9 +266,9 @@ def _is_loopback_url(base_url):
 # The model is the user's explicit choice: one line per role moves it.
 DERIVED_MODELS = {
     "nvidia": {
-        "planner": "z-ai/glm-5.3-flash",
-        "policy": "z-ai/glm-5.3-flash",
-        "text": "z-ai/glm-5.3-flash",
+        "planner": "meta/llama-3.2-11b-vision-instruct",
+        "policy": "meta/llama-3.2-11b-vision-instruct",
+        "text": "meta/llama-3.2-11b-vision-instruct",
     },
     "groq": {"planner": "openai/gpt-oss-120b", "policy": "openai/gpt-oss-20b", "text": "openai/gpt-oss-20b"},
     "deepseek": {"planner": "deepseek-chat", "policy": "deepseek-chat", "text": "deepseek-chat"},
@@ -375,8 +375,7 @@ No API key found. One free key runs the whole agent:
   3. Paste it in the agent sidebar in Firefox (it asks on first open), or here
      when this starter asks, or in .env as NVIDIA_API_KEY=... and run again.
 
-That one key runs the planner, the executor and the text helper (z-ai/glm-5.3-flash,
-thinking off).
+That one key runs the planner, the executor and the text helper (meta/llama-3.2-11b-vision-instruct).
 A Groq key (https://console.groq.com/keys) is optional: faster per call, but its
 free tier is 8 000 tokens per minute and a long mission spends that mid-run.
 """.strip()

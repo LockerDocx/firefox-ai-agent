@@ -11,8 +11,8 @@ if not KEY:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from jev_ultrafast import providers
-from jev_ultrafast.questions import PLANNER_SYSTEM
+from jev_ultrafast import providers  # noqa: E402
+from jev_ultrafast.questions import PLANNER_SYSTEM  # noqa: E402
 
 missions = [
     "Book the cheapest direct flight from Barcelona to Rome next Friday, one adult",
@@ -64,7 +64,8 @@ for mission in missions:
             )
             if is_valid:
                 valid_plans += 1
-            print(f"[{ms:4} ms] {mission[:45]:47} -> valid: {is_valid} | steps: {len(steps) if isinstance(steps, list) else 0}")
+            n = len(steps) if isinstance(steps, list) else 0
+            print(f"[{ms:4} ms] {mission[:40]:42} -> valid: {is_valid} | steps: {n}")
             print(f"       raw: {raw[:100]!r}\n")
     except Exception as e:
         ms = round((time.perf_counter() - t0) * 1000)

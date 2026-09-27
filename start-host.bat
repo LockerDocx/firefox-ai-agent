@@ -52,10 +52,10 @@ rem Two lines in .env can pin the model the agent used to derive: the wrong id o
 rem shipped (zai/glm-5.3) and the model itself (z-ai/glm-5.3). Both move to the one this version
 rem ships, z-ai/glm-5.3-flash. JEV_KEEP_MODEL=1 skips this for anyone who wants the full-size model.
 if exist ".env" (
-  findstr /R /C:"^[A-Z_]*MODEL=zai/glm-5.3" /C:"^[A-Z_]*MODEL=z-ai/glm-5.3" ".env" >nul 2>nul && (
+  findstr /R /C:"^[A-Z_]*MODEL=zai/glm-5.3" /C:"^[A-Z_]*MODEL=z-ai/glm-5.3" /C:"^[A-Z_]*MODEL=z-ai/glm-5.3-flash" ".env" >nul 2>nul && (
     copy /y ".env" ".env.bak" >nul 2>nul
-    powershell -NoProfile -Command "if ($env:JEV_KEEP_MODEL -ne '1') { (Get-Content .env) -replace '^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3\s*$','${1}z-ai/glm-5.3-flash' | Set-Content .env }" >nul 2>nul
-    echo  Updated the pinned model in .env to z-ai/glm-5.3-flash ^(backup: .env.bak^).
+    powershell -NoProfile -Command "if ($env:JEV_KEEP_MODEL -ne '1') { (Get-Content .env) -replace '^([A-Z_]*MODEL=)(zai|z-ai)/glm-5\.3(-flash)?\s*$','${1}meta/llama-3.2-11b-vision-instruct' | Set-Content .env }" >nul 2>nul
+    echo  Updated the pinned model in .env to meta/llama-3.2-11b-vision-instruct ^(backup: .env.bak^).
   )
 )
 
