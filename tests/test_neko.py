@@ -297,7 +297,7 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setattr(permissions, "PERMISSIONS_PATH", tmp_path / "permissions.json")
     monkeypatch.setattr("jev_ultrafast.neko.SESSIONS_PATH", tmp_path / "neko-sessions.json")
     monkeypatch.setenv("JEV_LAYA", "off")
-    monkeypatch.setattr(firefox, "check_providers", lambda: {})
+    monkeypatch.setattr(firefox, "check_providers", lambda *_a, **_k: {})
     return tmp_path
 
 
