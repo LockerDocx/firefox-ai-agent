@@ -1,0 +1,69 @@
+name: Probe models
+
+# Choosing a model with a stopwatch instead of a model card. Run it by hand with the patterns you
+# care about; it prints a ranked table (median latency per role, valid plans, routing accuracy,
+# exact text values) and uploads the raw measurements as an artifact.
+#
+# The point of it existing in the repository: when someone says "this model is slow" or "pick
+# another one", the answer is a measurement with the agent's own calls, on this provider's key,
+# and it stays in the Actions history where it can be re-run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      patterns:
+        description: "Comma-separated id fragments to pick from the catalogue (empty = first ones)"
+        required: false
+        default: ""
+      models:
+        description: "Exact ids, comma-separated (wins over patterns)"
+        required: false
+        default: ""
+      limit:
+        description: "At most this many models"
+        required: false
+        default: "10"
+      routing:
+        description: "Routing cases per model (0 = skip the battery)"
+        required: false
+        default: "6"
+      plans:
+        description: "Planner missions per model (0 = skip)"
+        required: false
+        default: "1"
+  push:
+    paths:
+      - ".github/workflows/probe-models.yml"
+      - "scripts/probe_models.py"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[documents]"
+      - name: Probe
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+        run: |
+          ARGS=(--limit "${{ inputs.limit || '10' }}" --routing "${{ inputs.routing || '6' }}" --plans "${{ inputs.plans || '1' }}" --json probe.json)
+          if [ -n "${{ inputs.models }}" ]; then ARGS+=(--models "${{ inputs.models }}"); fi
+          for pattern in $(echo "${{ inputs.patterns }}" | tr ',' ' '); do ARGS+=(--pattern "$pattern"); done
+          python scripts/probe_models.py "${ARGS[@]}" | tee probe.md
+      - name: Keep the measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-models
+          path: |
+            probe.json
+            probe.md
+          if-no-files-found: warn
