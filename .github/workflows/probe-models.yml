@@ -31,6 +31,14 @@ on:
         description: "Planner missions per model (0 = skip)"
         required: false
         default: "1"
+      text:
+        description: "Text-contract cases per model (0 = skip)"
+        required: false
+        default: "1"
+      reasoning:
+        description: "The reasoning setting to send (none, low, high...)"
+        required: false
+        default: "none"
   push:
     paths:
       - ".github/workflows/probe-models.yml"
@@ -55,7 +63,9 @@ jobs:
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: |
-          ARGS=(--limit "${{ inputs.limit || '10' }}" --routing "${{ inputs.routing || '6' }}" --plans "${{ inputs.plans || '1' }}" --json probe.json)
+          ARGS=(--limit "${{ inputs.limit || '10' }}" --routing "${{ inputs.routing || '6' }}"
+                --plans "${{ inputs.plans || '1' }}" --text "${{ inputs.text || '1' }}"
+                --reasoning "${{ inputs.reasoning || 'none' }}" --json probe.json)
           if [ -n "${{ inputs.models }}" ]; then ARGS+=(--models "${{ inputs.models }}"); fi
           for pattern in $(echo "${{ inputs.patterns }}" | tr ',' ' '); do ARGS+=(--pattern "$pattern"); done
           python scripts/probe_models.py "${ARGS[@]}" | tee probe.md
