@@ -15,6 +15,13 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.12.9] — 2026-09-27
+
+### Added
+
+- **Full Text Selection & Copy Support in Extension Sidebar.** Added explicit `user-select: text` styling and high-visibility text selection highlighting across conversation messages, step logs, history, and status outputs.
+- **`📋 Copy text` / Copiar texto Button.** Added a one-click copy button in the Conversation and Log tabs that copies the full view text directly to the system clipboard with instant visual feedback (`✓ Copied!`).
+
 ## [0.12.8] — 2026-09-27
 
 ### Fixed

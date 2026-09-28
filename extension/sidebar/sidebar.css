@@ -393,3 +393,17 @@ button.probe { font-size: 11px; padding: 3px 10px; }
 .log .error .lvl, .log .error .msg { color: #ffb3c1; }
 .log .ok .lvl { color: var(--ok); }
 .log .warn .lvl { color: var(--warn); }
+
+/* ── full text selection and copy support ────────────────────────── */
+body, main, section, .chat, .log, .msg, .text, .task-log, .history, .plan, p, span, code, pre, input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+button, .chip, .tab, summary {
+  user-select: none;
+  -webkit-user-select: none;
+}
+::selection {
+  background: rgba(124, 108, 255, 0.4);
+  color: #ffffff;
+}

@@ -808,6 +808,20 @@ document.querySelectorAll("#activity .tab").forEach((tab) => {
   tab.addEventListener("click", () => setActivityView(tab.dataset.view));
 });
 
+$("activity-copy").addEventListener("click", () => {
+  const container = activityView === "chat" ? $("chat") : $("log");
+  const text = container ? (container.innerText || container.textContent || "") : "";
+  if (!text.trim()) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = $("activity-copy");
+    const orig = btn.textContent;
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }).catch((err) => {
+    showError("Could not copy text: " + err);
+  });
+});
+
 $("activity-clear").addEventListener("click", () => {
   entries = [];
   seenKeys = new Set();
