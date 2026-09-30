@@ -15,6 +15,16 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.13.0] — 2026-09-28
+
+### Added
+
+- **FastPath Architecture v1.0 (Local-First Action-Verifiable Agent).** Complete redesign replacing heavy HTML prompting with actionable AXTree candidate indexing, GBNF grammar decoding, 4-level self-healing cascades, and zero-LLM procedural replay.
+- **Sistema 0: Caché Procedimental (`<1 ms`).** Deterministic SHA-256 fingerprint matching (`procedural_cache.py`) for verified action sequences, replaying frequent tasks in <1 ms with automatic postcondition invalidation.
+- **Sistema 1: GBNF Grammar-Constrained Decoding.** Context-free grammar module (`gbnf_grammar.py`) constraining local model token sampling to guarantee 100% valid JSON payload structure.
+- **Sistema 2: Selectores Auto-Reparables (Self-Healing Cascade).** 4-level fallback resolver (`self_healing.py` / `self_healing.js`) matching elements via ARIA accessibility, semantic text, AXTree relative position, and BBox visual coordinates.
+- **Sistema 3: Extractor Ligero AXTree & MutationObserver.** Ultra-compact content script (`ax_tree.js` / `axtree.py`) extracting 3-6 KB payloads of actionable candidates and tracking DOM mutations incrementally.
+
 ## [0.12.9] — 2026-09-27
 
 ### Added
