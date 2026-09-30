@@ -138,7 +138,27 @@ def test_the_password_never_reaches_the_page_key_or_the_guard():
     assert not re.search(r"name\(e\),\s*e\.value", guard)
 
 
-def test_masking_runs_in_a_real_javascript_engine():
+def _run_node(script, tmp_path):
+    """Ejecuta JS en node y devuelve stdout.
+
+    El script va en un archivo UTF-8, no en argv: bajo una página de códigos heredada
+    (`LC_ALL=C`, que es lo que prueba CI) un argumento con acentos o con «•••» no se
+    puede codificar a ASCII y posix_spawn lanza UnicodeEncodeError. Tampoco se puede
+    dejar la decodificación en la del sistema, por el mismo motivo.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node no está instalado")
+    path = tmp_path / "enmascarado.js"
+    path.write_text(script, encoding="utf-8")
+    return subprocess.run(
+        [node, str(path)], capture_output=True, encoding="utf-8", timeout=30, check=True
+    ).stdout
+
+
+def test_masking_runs_in_a_real_javascript_engine(tmp_path):
     """Comprobado por node, no por lectura: un regex puede mentir sobre lo que ejecuta."""
     script = """
     const secret = e => e.type === 'password';
@@ -151,34 +171,22 @@ def test_masking_runs_in_a_real_javascript_engine():
     };
     process.stdout.write(JSON.stringify(out));
     """
-    import shutil
-
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node no está instalado")
-    result = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=30, check=True)
-    out = json.loads(result.stdout)
+    out = json.loads(_run_node(script, tmp_path))
     assert out["action"] == "", "el valor de un password no puede viajar en la acción"
     assert "hunter2" not in json.dumps(out), "el secreto aparece en algún sitio"
     assert out["plain"] == "Zurich", "un campo normal debe seguir mandando su valor"
     assert out["pageKey"] and out["guard"], "un password ya escrito tiene que cambiar el page key"
 
 
-def test_a_password_already_filled_is_visible_as_a_password_not_as_its_value():
+def test_a_password_already_filled_is_visible_as_a_password_not_as_its_value(tmp_path):
     """Un campo con contenido no es un campo vacío: el modelo debe distinguirlo."""
-    import shutil
-
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node no está instalado")
     script = (
         "const secret=e=>e.type==='password';"
         "const mask=e=>secret(e)?(e.value?'•••':''):(e.value??'');"
         "process.stdout.write(JSON.stringify([mask({type:'password',value:'x'}),"
         "mask({type:'password',value:''})]));"
     )
-    filled, empty = json.loads(subprocess.run([node, "-e", script], capture_output=True, text=True,
-                                              timeout=30, check=True).stdout)
+    filled, empty = json.loads(_run_node(script, tmp_path))
     assert filled and not empty, "un password con contenido y uno vacío deben verse distintos"
 
 
