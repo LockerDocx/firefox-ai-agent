@@ -15,6 +15,22 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.13.2] — 2026-09-30
+
+The change v0.13.1 should have carried. Its two JavaScript tests ran `node -e <script>` with
+a script containing an accent and the mask character «•••»; under a legacy code page an
+argv string must be ASCII-encodable, so `posix_spawn` raised `UnicodeEncodeError` before
+node started, and `text=True` had the same problem decoding stdout. CI caught it on the
+v0.13.1 commit, in all three Python jobs. The script now travels as a UTF-8 file and stdout
+is decoded as UTF-8.
+
+The defect was in the tests, not in the shipped code: the mask, the action value, the page
+key and the guard are exactly as v0.13.1 published them, and those artifacts were correct.
+v0.13.1 is left untouched on purpose. This release exists so the tag and `main` agree and
+CI is green on what the tag points at.
+
+661 tests pass under both UTF-8 and `LC_ALL=C PYTHONUTF8=0`; ruff clean.
+
 ## [0.13.1] — 2026-09-30
 
 The published v0.13.0 tag could not complete a single real action: a JavaScript SyntaxError on
