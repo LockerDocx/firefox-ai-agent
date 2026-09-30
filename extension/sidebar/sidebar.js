@@ -30,7 +30,12 @@ function render() {
   $("task").hidden = mode !== "orchestrated";
   if (mode === "orchestrated") renderTask(state);
   if (live && live.page) renderLive(live);
-  const footer = [state.planner && `planner · ${state.planner}`, state.policy && `policy · ${state.policy}`]
+  const footer = [
+    // H12: the route is part of what the user paid for, so it is part of what they see.
+    state.route && `route · ${state.route === "planned" ? "planned mission" : "single goal"}`,
+    state.planner && `planner · ${state.planner}`,
+    state.policy && `policy · ${state.policy}`,
+  ]
     .filter(Boolean)
     .join("   ·   ") || "no models configured";
   $("models").textContent = footer;
@@ -695,7 +700,10 @@ function syncRun(state) {
     }
     if (state.status === "stopped") addEntry("warn", "Stopped by you");
     if (state.status === "error" || state.status === "blocked") {
-      addEntry("error", state.error || `Run ${state.status}`);
+      // A blocked run that cannot say why is indistinguishable from a broken one.
+      // A missing credential is not a failure: it is something the user can fix in one line.
+      const why = state.error || state.blocked_reason;
+      addEntry(state.blocked_reason ? "warn" : "error", why || `Run ${state.status}`);
     }
   }
   if (changed) lastStatus = state.status;

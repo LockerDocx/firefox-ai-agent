@@ -313,6 +313,9 @@ def action_space(actions):
             index = str(len(elements) + 1)
             indices[node] = index
             element = {k: action[k] for k in ("role", "value", "checked", "selected", "expanded") if k in action}
+            if action.get("secret"):
+                # El campo es un objetivo válido, pero su contenido nunca sale del navegador.
+                element["secret"] = True
             element.update(index=index, label=action["label"].split(" → ")[0], operations=[])
             if kind == "select":
                 element["value"] = action.get("current_value", "")
@@ -327,7 +330,12 @@ def action_space(actions):
         target = index
         if kind == "select":
             target = f"{index}:{len(element['options']) + 1}"
-            element["options"].append({"index": target, "label": action["label"], "value": action["value"]})
+            # The element's own label is already on its line above, so an option line that
+            # repeats it as "Passengers → Adults" pays for those characters on every single
+            # option of every dropdown. Only the part that identifies the option is useful.
+            element["options"].append(
+                {"index": target, "label": action["label"].split(" → ")[-1], "value": action["value"]}
+            )
         group[target] = action
     return elements, targets, controls
 
@@ -428,8 +436,134 @@ def typesafe_choose(state, goal, history):
 POLICY_TEXT_CHARS = 2500
 FIELD_TEXT_CHARS = 2000
 
+# ── H6 · presupuesto del prompt del ejecutor ──────────────────────────────────
+# Measured on a dense page (scripts/bench_prompt_size.py): 88% of the prompt was the
+# element table, and one request cost up to 30.053 characters (~7.500 tokens) — three
+# quarters of Groq's free minute for a single decision. The action_space itself takes
+# 0.69 ms, so the prompt was the bottleneck, not the code.
+PROMPT_ELEMENT_BUDGET = 120
+# A native <select> is ONE element that renders one line per observed option, so the
+# element count alone does not bound the prompt. Options get their own line budget, and
+# a dropdown is kept whole or not at all: a select whose options are missing is one the
+# model cannot choose from, which is worse than not showing it at all.
+#
+# 60 is the measured compromise (scripts/bench_prompt_size.py prints the whole curve) on
+# a dense page holding 6 dropdowns: it keeps the 2 nearest the viewport, lands at
+# 10.036 characters — under the 12.000 ceiling and a 52.7% saving — and a page with the
+# two or three dropdowns a real form shows is still seen whole. Raise it to trade money
+# for reach; lower it and a mission that needs a dropdown below the fold must scroll.
+PROMPT_OPTION_BUDGET = 60
+# How many viewport-heights away an element still counts as reachable without scrolling.
+VIEWPORT_REACH = 1.5
+# A select is one element carrying one line per observed option; those lines are the
+# bulk of a dense table, so interactive roles are worth keeping over decorative ones.
+INTERACTIVE_ROLES = {
+    "button", "link", "textbox", "combobox", "checkbox", "radio", "menuitem",
+    "menuitemcheckbox", "menuitemradio", "option", "switch", "tab", "searchbox", "slider",
+}
 
-def _policy_request(goal, state, elements, operations, history):
+
+def _utility(action, state, recent_nodes):
+    """How likely an element is to be the next action, in points.
+
+    Kept deliberately simple and explainable: a number that decides which elements reach
+    the model has to be one a maintainer can predict, and one a test can pin.
+    """
+    if action.get("node") in recent_nodes:
+        return 10_000  # never drop what the run is in the middle of
+    rect = action.get("rect") or {}
+    reach = (state.get("h") or 0) * VIEWPORT_REACH
+    top = rect.get("y")
+    score = 0
+    if top is not None and -reach <= top <= reach:
+        score += 100  # visible or one flick away
+    if str(action.get("role", "")).lower() in INTERACTIVE_ROLES:
+        score += 30
+    if action.get("value"):
+        score += 15  # a field that holds something is worth showing
+    if action.get("label"):
+        score += 10
+    if action.get("kind") == "fill":
+        score += 5
+    return score
+
+
+def budget_actions(actions, state, history=(), limit=PROMPT_ELEMENT_BUDGET, option_limit=PROMPT_OPTION_BUDGET):
+    """Keep the elements most likely to be the next action; report the rest as omitted.
+
+    Two budgets, because they cost different things: a plain element is one line of the
+    table, while a native <select> is one element that renders a line per option. Two
+    rules make the cut safe rather than merely cheap:
+
+    * whole elements go, never part of one. Keeping a dropdown but dropping its options
+      would make the right choice unrepresentable, which is worse than not showing it.
+    * what the run just did is never dropped, so the loop can still recover, confirm a
+      fill or commit an autocomplete suggestion after the budget has been spent.
+
+    Everything left out stays observable through SCROLL_DOWN, SCROLL_UP and WAIT, and the
+    omission is stated in the prompt rather than hidden.
+    """
+    recent_nodes = {h.get("node") for h in (history or ()) if h.get("node") is not None}
+    # Group by node: one observed element can produce several actions (an input and its
+    # combobox wrapper, or a select with all of its options).
+    groups = {}
+    for action in actions:
+        groups.setdefault(action.get("node"), []).append(action)
+    if limit is None or len(groups) <= limit:
+        return actions, 0
+
+    ranked = sorted(
+        groups.items(),
+        key=lambda item: (
+            -_utility(item[1][0], state, recent_nodes),
+            len(item[1][0].get("label") or ""),
+        ),
+    )
+    # Two passes, because the two kinds cost very different things. A button or a field is
+    # one line; a dropdown is one line plus one per option. Filling the budget in score
+    # order alone would let six dropdowns hide every button on the page, which is exactly
+    # the kind of blindness that turns a cheap prompt into a failed mission.
+    plain = [item for item in ranked if len(item[1]) == 1]
+    selects = [item for item in ranked if len(item[1]) > 1]
+
+    kept, omitted, option_lines, elements_kept = [], 0, 0, 0
+    # Plain elements are cheap, so on a dense page they would fill every slot and leave
+    # the model with no dropdown at all — which silently breaks every SELECT mission.
+    # A slice of the budget is therefore kept back for the expensive groups.
+    reserve = max(2, limit // 6)
+    plain_ceiling = max(1, limit - reserve)
+    for _node, group in plain:
+        if elements_kept < plain_ceiling or not kept:
+            kept.extend(group)
+            elements_kept += 1
+        else:
+            omitted += 1
+    # Two different accounts, deliberately: `elements_kept` counts ELEMENTS (a dropdown is
+    # one, whatever its option count) and `option_lines` counts only what a dropdown
+    # adds. Conflating them let a single 20-option select consume the whole budget.
+    for _node, group in selects:
+        urgent = _utility(group[0], state, recent_nodes) >= 10_000
+        cost = len(group)
+        if urgent:
+            kept.extend(group)
+            elements_kept += 1
+            option_lines += cost
+        elif elements_kept < limit and option_lines + cost <= (option_limit or cost):
+            kept.extend(group)
+            elements_kept += 1
+            option_lines += cost
+        else:
+            omitted += 1
+    if not kept:  # a budget below one element must still leave the loop something to do
+        kept = ranked[0][1]
+        omitted = len(groups) - 1
+    # Preserve the observed order: the model reads the page top to bottom.
+    order = {id(a): i for i, a in enumerate(actions)}
+    kept.sort(key=lambda a: order[id(a)])
+    return kept, omitted
+
+
+def _policy_request(goal, state, elements, operations, history, omitted=0):
     lines = [f"GOAL: {goal}", "", f"PAGE: {state['url']} — {state['title']}"]
     if state.get("text"):
         # The indexed element table below carries the actionable detail; the free text is
@@ -447,9 +581,15 @@ def _policy_request(goal, state, elements, operations, history):
             if element.get(key) is not None:
                 line += f" · {key}={json.dumps(element[key])}"
         line += f" · ops: {', '.join(element['operations'])}"
+        if element.get("secret"):
+            line += " · secret: fill only with a value the goal supplies; never invent one"
         lines.append(line)
         for option in element.get("options", []):
             lines.append(f"    {option['index']} {json.dumps(option['label'])} → value {json.dumps(option['value'])}")
+    if omitted:
+        lines.append(
+            f"(+{omitted} more observed elements are not listed; scroll or WAIT to reach them)"
+        )
     lines.append("")
     lines.append("AVAILABLE OPERATIONS (choose exactly one):")
     lines.extend(f"{name}: {description}" for name, description in operations.items())
@@ -482,10 +622,13 @@ def _validate_llm_choice(answer, operations, targets):
 
 def provider_choose(state, goal, history):
     """One request to the configured provider returns operation and target together."""
-    elements, targets, controls = action_space(state["actions"])
+    # H6: the element table, not the local code, was the cost. Budget it before the
+    # action space is built so every index in the prompt still maps to a real element.
+    actions, omitted = budget_actions(state["actions"], state, history)
+    elements, targets, controls = action_space(actions)
     operations = operation_catalog(targets, controls)
     provider = providers.resolve("policy")
-    user = _policy_request(goal, state, elements, operations, history)
+    user = _policy_request(goal, state, elements, operations, history, omitted)
     started = time.perf_counter()
     content, meta = None, None
     for attempt in range(2):
@@ -518,6 +661,10 @@ def provider_choose(state, goal, history):
         "raw_answers": answer,
         "model": meta["model"],
         "usage": meta.get("usage", {}),
+        # H6 made measurable: what the prompt cost, and what the budget left out.
+        "prompt_chars": len(user),
+        "prompt_elements": len(elements),
+        "omitted_elements": omitted,
         "latency_ms": round((time.perf_counter() - started) * 1000),
         "request": {
             "provider": provider["name"],
@@ -535,6 +682,8 @@ def field_context(goal, action, page, history):
     return {
         "goal": goal,
         "field": {k: action.get(k) for k in ("label", "role", "value")},
+        # Un campo de contraseña llega sin valor por diseño; el ayudante no debe deducir uno.
+        "secret": bool(action.get("secret")),
         "page": {"title": page["title"], "text": page["text"][:FIELD_TEXT_CHARS]},
         "recent_actions": [{k: h.get(k) for k in ("action", "text")} for h in history[-6:]],
     }
@@ -557,6 +706,16 @@ def field_text(context):
         try:
             output = providers.extract_json(content)
             value = output["text"]
+            if set(output) == {"text"} and value is None and context.get("secret"):
+                # The goal does not carry this credential, the page does not supply one, and
+                # the browser will not hand one over. Inventing a password is the one thing
+                # an agent must never do, so the answer is "I do not have it", not a guess.
+                return None, {
+                    "model": provider["model"],
+                    "latency_ms": round((time.perf_counter() - started) * 1000),
+                    "usage": meta.get("usage", {}),
+                    "unavailable": "the goal supplies no value for this field",
+                }
             if set(output) != {"text"} or not isinstance(value, str) or not value.strip() or len(value) > 2000:
                 raise ValueError()
         except (ValueError, KeyError, TypeError) as rejected:
@@ -574,14 +733,27 @@ def field_text(context):
     raise ValueError(f"Text helper returned no valid field value ({why}; {last}); nothing typed.") from None
 
 
-def planning_config():
+def planning_config(goal=None):
     """The planner provider config, or None to keep the original single-goal loop.
 
     Enabled by configuration or derived from a free key (one key is enough to
     run the whole agent), so a fresh install plans its missions out of the box.
+
+    H12: a planner call is a full reasoning call — 21 s measured on a real install, against
+    402 ms for the executor — and in the 11-mission battery it *hurt*: it invented domains
+    the user never wrote and the executor followed them (H9). So with a goal in hand the
+    mission is routed first, and a mission that is one gesture pays no planner call.
+    Without a goal the old behaviour stands: any caller that has not opted into routing
+    keeps exactly what it had.
     """
     if not providers.planner_enabled():
         return None
+    if goal is not None:
+        from . import routing
+
+        planned, _decision = routing.needs_a_plan(goal)
+        if not planned:
+            return None
     return providers.resolve("planner")
 
 

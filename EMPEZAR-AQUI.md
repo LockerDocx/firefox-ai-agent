@@ -49,7 +49,7 @@ Si algo falla, mira la tabla de [problemas comunes](#-problemas-comunes) al fina
 
 ## 🟦 PASO 2 — Conseguir tu clave API gratuita (2 minutos)
 
-La clave es como una contraseña para que el asistente use una IA. Se consigue en **NVIDIA** (gratis) y **esa sola clave hace funcionar los tres papeles** del agente con el modelo `z-ai/glm-5.3-flash` (sin razonamiento):
+La clave es como una contraseña para que el asistente use una IA. Se consigue en **NVIDIA** (gratis) y **esa sola clave hace funcionar los tres papeles** del agente con el modelo `meta/llama-3.2-11b-vision-instruct` (sin razonamiento):
 
 1. Abre **https://build.nvidia.com** → *Login* (puedes crear la cuenta con Google)
 2. Icono de tu perfil → **API Keys** → **Generate API Key**
@@ -111,17 +111,17 @@ La clave es como una contraseña para que el asistente use una IA. Se consigue e
    ```
    🔑 One free key starts the agent
    NVIDIA NIM · one key runs all three roles (recommended)   get one ↗
-   (usa z-ai/glm-5.3-flash, sin razonamiento)
+   (usa meta/llama-3.2-11b-vision-instruct, sin razonamiento)
    [ pega aquí la clave........... ]         [ Save ]
    ```
    Pega la del PASO 2 y pulsa **Save**. Nada más: **no hay que abrir ni editar ningún archivo**, ni tocar la ventana del host.
    Debajo verás qué queda configurado —una sola clave cubre los tres papeles:
    ```
-   Ready — planner nvidia:z-ai/glm-5.3-flash · policy nvidia:z-ai/glm-5.3-flash · text nvidia:z-ai/glm-5.3-flash
+   Ready — planner nvidia:meta/llama-3.2-11b-vision-instruct · policy nvidia:meta/llama-3.2-11b-vision-instruct · text nvidia:meta/llama-3.2-11b-vision-instruct
    ```
    *(Si en tu `.env` quedó una clave de Groq de antes, el panel la nombra: **"Also on this machine… Not used"**. No molesta, pero tampoco se usa: es la que se agotaba a mitad de misión con el aviso *Upgrade to Dev Tier*. Si quieres usarla en algún papel, se pide a mano con `POLICY_PROVIDER=groq` en `docs/providers.md`.)*
 4. **Revisa la conexión de las IAs**: el panel prueba cada modelo y te dice el resultado exacto:
-   - 🟢 `Executor · nvidia:z-ai/glm-5.3-flash 36 000 ms` = tu clave funciona ✓ (el número es lo que tardó de verdad; en la capa gratuita de NVIDIA la cola manda, y con flash puede ser bastante)
+   - 🟢 `Executor · nvidia:meta/llama-3.2-11b-vision-instruct 36 000 ms` = tu clave funciona ✓ (el número es lo que tardó de verdad; en la capa gratuita de NVIDIA la cola manda, y con flash puede ser bastante)
    - 🔴 **algo rojo** = pulsa **"Test setup"** y lee el mensaje: dice EXACTAMENTE qué falla (clave mal pegada, sin saldo, modelo inexistente…). Si el problema es la clave, la tarjeta del punto 3 se abre sola para que pegues otra.
 5. Escribe una misión de prueba y pulsa **Run**:
    > Busca el artículo de la Wikipedia sobre la Torre Eiffel y ábrelo.
@@ -135,7 +135,7 @@ La clave es como una contraseña para que el asistente use una IA. Se consigue e
 
 ## 🎉 ¡Listo!
 
-Acabas de ver las dos IAs trabajando: el **planificador** parte tu misión en pasos, y el **ejecutor** elige cada acción — los dos con tu única clave de NVIDIA (`z-ai/glm-5.3-flash`, sin razonamiento). Todo dentro de **tu Firefox real**.
+Acabas de ver las dos IAs trabajando: el **planificador** parte tu misión en pasos, y el **ejecutor** elige cada acción — los dos con tu única clave de NVIDIA (`meta/llama-3.2-11b-vision-instruct`, sin razonamiento). Todo dentro de **tu Firefox real**.
 
 **Ideas para probar:**
 - *Encuentra vuelos de ida de Barcelona a Roma el 20 de junio para 1 adulto y para cuando se vean los resultados*
@@ -238,10 +238,10 @@ Laya es un motor de decisión **gratis, de código abierto y 100 % local** (de C
 | Veo esto… | Solución |
 |---|---|
 | El puntito del panel está **rojo "offline"** | Firefox no arrancó el agente: haz **doble clic en el starter** (PASO 3) y deja esa ventana abierta → todo sigue funcionando igual. Si acabas de mover la carpeta del proyecto, ese doble clic también la vuelve a registrar. En Firefox *snap*/*Flatpak* el sistema puede pedir permiso la primera vez (o denegarlo): con la ventana abierta va igual |
-| **Planner o Text writer en 🔴 con error 404 / "not found"** | El id del modelo estaba mal en versiones anteriores (`zai/glm-5.3` en vez de `z-ai/…`). **El starter nuevo lo arregla solo** al arrancar: corrige el id **y** pasa el modelo al que envía esta versión (`z-ai/glm-5.3-flash`), con copia en `.env.bak`. Para conservar el modelo grande a propósito: `JEV_KEEP_MODEL=1` |
+| **Planner o Text writer en 🔴 con error 404 / "not found"** | El id del modelo estaba mal en versiones anteriores (`zai/glm-5.3` en vez de `z-ai/…`). **El starter nuevo lo arregla solo** al arrancar: corrige el id **y** pasa el modelo al que envía esta versión (`meta/llama-3.2-11b-vision-instruct`), con copia en `.env.bak`. Para conservar el modelo grande a propósito: `JEV_KEEP_MODEL=1` |
 | **🔴 con error 401/403 "Authorization failed"** | El proveedor **rechazó tu clave** (mal pegada, incompleta o revocada). Genera una nueva (Groq en **console.groq.com/keys**, NVIDIA en **build.nvidia.com** → perfil → *API Keys*) y **pégala en el propio panel**: botón **🔑 API keys** → Save. Se guarda y se aplica al momento, sin reiniciar nada |
 | Un modelo está en **🔴 en el panel** | Pulsa **"Test setup"** y lee el mensaje exacto: `401/403` = clave mal pegada → pégala otra vez con **🔑 API keys**; `404` o `not found` = ese nombre de modelo no existe en el proveedor → elige otro en el desplegable del panel **⚙️ Models & parameters** |
-| **¿Por qué el panel ya no dice `glm-5.3`?** | Porque el agente ahora usa `z-ai/glm-5.3-flash` sin razonamiento en los tres papeles (`z-ai/glm-5.3-flash` planifica, decide y escribe). Si tenías el modelo antiguo fijado a mano, el starter lo migra al arrancar; `JEV_KEEP_MODEL=1` lo deja como estaba |
+| **¿Por qué el panel ya no dice `glm-5.3`?** | Porque el agente ahora usa `meta/llama-3.2-11b-vision-instruct` sin razonamiento en los tres papeles (`meta/llama-3.2-11b-vision-instruct` planifica, decide y escribe). Si tenías el modelo antiguo fijado a mano, el starter lo migra al arrancar; `JEV_KEEP_MODEL=1` lo deja como estaba |
 | Sale un **error rojo en el panel** al pulsar Run | Léelo: ahora incluye la causa real (`HTTP 401: invalid key`, `HTTP 404: model ... does not exist`...). Cada caso está en esta tabla |
 | No encuentro `manifest.json` al cargar el add-on | Está DENTRO de la carpeta `extension` del proyecto (PASO 4, punto 4) |
 | Reinicié Firefox y el add-on desapareció | Normal, es "temporal" → repite el PASO 4 |
@@ -249,7 +249,7 @@ Laya es un motor de decisión **gratis, de código abierto y 100 % local** (de C
 | Estaba en la pestaña de inicio y di Run | No pasa nada: abre DuckDuckGo automáticamente y trabaja allí |
 | `Python 3.11 or newer is required` | El mensaje ya te da el comando de tu sistema (zypper/apt/dnf/pacman) o el enlace de python.org |
 | La ventana negra se cierra al instante | En el instalador de Python marca **"Add python.exe a PATH"**, reinstala y repite |
-| ¿Y si solo tengo una clave? | **No hay que hacer nada**: una sola clave (NVIDIA, o Groq si es la que tienes) configura los tres papeles sola. Con las dos, manda NVIDIA (`z-ai/glm-5.3-flash` en todo, sin razonamiento) |
+| ¿Y si solo tengo una clave? | **No hay que hacer nada**: una sola clave (NVIDIA, o Groq si es la que tienes) configura los tres papeles sola. Con las dos, manda NVIDIA (`meta/llama-3.2-11b-vision-instruct` en todo, sin razonamiento) |
 | Quiero cambiar el modelo | Panel **⚙️ Models & parameters** → desplegable → elegir (se guarda solo). Sin panel: `docs/providers.md` |
 | El desplegable de modelos sale **vacío** | Pulsa **"Refresh catalogue"**. Si sigue vacío: falta la clave de ese proveedor en `.env` (cada desplegable solo lista proveedores con clave) |
 | *"Missing library for .pdf files"* al analizar un PDF | Cierra la ventana negra y vuelve a arrancar con el **starter nuevo** (instala el soporte de PDF/Word/Excel solo). Si persiste: en la carpeta del proyecto ejecuta `pip install -e ".[documents]"` y reinicia |
@@ -270,7 +270,7 @@ Laya es un motor de decisión **gratis, de código abierto y 100 % local** (de C
   papeles; el reparto NVIDIA+Groq existe (es el más rápido por llamada) pero hay que pedirlo a mano, porque
   el plan gratuito de Groq se agota a mitad de misión.
 - **¿Mi clave está segura?** Sí: se guarda solo en TU ordenador (el archivo `.env`) y solo viaja a NVIDIA cuando el agente piensa. Nunca llega a las webs que visitas ni a la extensión.
-- **¿Puedo usar el modelo grande si `flash` me va lento?** Sí, y es una línea: en **⚙️ Modelos y parámetros** cambias el modelo de cada papel, o pones `POLICY_MODEL=z-ai/glm-5.3` en el `.env`. Medido el 26/09/2026 con la misma clave: el modelo grande contestó el papel de cada paso en **1,9 s** de mediana y `flash` en **37,4 s**.
+- **¿Puedo poner otro modelo si este va lento?** Sí: en **⚙️ Modelos y parámetros** cambias el modelo de cada papel, o pones `POLICY_MODEL=<otro-modelo>` en el `.env`. Ten en cuenta que el papel que manda en la latencia es el **planificador** (pide un razonamiento largo), no el ejecutor: con el modelo que se envía por defecto, el ejecutor contestó en **402 ms** y el planificador en **21 s** (medido el 27/09/2026 con clave gratuita de NVIDIA).
 - **¿Puede descontrolarse mi navegador?** No: solo actúa en la pestaña donde lo lanzaste, hay botón Stop, y un máximo de acciones por tarea.
 - **¿Funciona en todas las webs?** En la mayoría. Algunas con protecciones anti-bot muy agresivas pueden resistirse.
 - **¿En Chrome?** Este manual es para Firefox. El proyecto también funciona con Chrome para usuarios avanzados (`README.md`).

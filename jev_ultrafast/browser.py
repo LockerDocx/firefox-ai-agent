@@ -27,8 +27,14 @@ def target_expression(action):
 
     Shared by the Chrome path and the sandbox (Neko) path: model output never
     becomes selectors or code, only observed node ids are executable.
+
+    The action reaches the arrow function as a JSON OBJECT literal. Quoting it as a
+    string closed the literal on its first inner quote, so every click, fill and select
+    died with a JavaScript SyntaxError and a StalePage (H8, verified on a real
+    example.com click). Keep the concatenation below unquoted.
     """
-    return """(action => {
+    return (
+        """(action => {
       const e=window.__jevFast?.nodes.get(action.node);
       if (!e?.isConnected || e.matches(':disabled') || e.closest('[aria-disabled="true"],[inert]') ||
           !e.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})) return null;
@@ -44,7 +50,10 @@ def target_expression(action):
         e.dispatchEvent(new Event('change',{bubbles:true}));
       }
       return {x,y};
-    })(\"""" + json.dumps(action) + '")'
+    })("""
+        + json.dumps(action)
+        + ")"
+    )
 
 class StalePage(ValueError):
     """A decision no longer refers to the observed page."""

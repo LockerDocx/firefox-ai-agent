@@ -6,7 +6,7 @@ Guía definitiva: qué haces **una vez** (setup) y qué haces **cada día** (uso
 - **Parte B** — tu sistema: openSUSE/SUSE · Ubuntu/Debian/Mint · Fedora/RHEL/Rocky · Arch/Manjaro · Windows · macOS.
 - **Parte C** — actualizar, mover, desinstalar, y los problemas típicos de cada sistema.
 
-> **Resumen si tienes prisa:** descargar el ZIP → conseguir una clave gratis de NVIDIA (una clave = los tres papeles, con `z-ai/glm-5.3-flash` sin razonamiento) → **un doble clic** (solo la primera vez) → cargar el `.xpi` en `about:debugging` → pegar la clave en el panel lateral. Desde ese momento, **abrir el panel arranca el agente solo**.
+> **Resumen si tienes prisa:** descargar el ZIP → conseguir una clave gratis de NVIDIA (una clave = los tres papeles, con `meta/llama-3.2-11b-vision-instruct` sin razonamiento) → **un doble clic** (solo la primera vez) → cargar el `.xpi` en `about:debugging` → pegar la clave en el panel lateral. Desde ese momento, **abrir el panel arranca el agente solo**.
 
 ---
 
@@ -57,7 +57,7 @@ Guía definitiva: qué haces **una vez** (setup) y qué haces **cada día** (uso
 
 ## Paso 2 · La clave gratis
 
-El agente necesita una clave de IA (gratis). Se consigue en **NVIDIA** y **esa sola clave cubre los tres papeles** con `z-ai/glm-5.3`:
+El agente necesita una clave de IA (gratis). Se consigue en **NVIDIA** y **esa sola clave cubre los tres papeles** con `meta/llama-3.2-11b-vision-instruct`:
 
 1. Abre **https://build.nvidia.com** → *Login* (vale la cuenta de Google)
 2. Tu perfil → **API Keys** → **Generate API Key**

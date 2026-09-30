@@ -396,7 +396,10 @@ class BridgeServer(Bridge):
     def _serve(self, conn):
         headers = self._read_handshake(conn)
         origin = headers.get("origin", "")
-        if origin and not origin.startswith("moz-extension://"):
+        # Firefox always sends Origin on a WebSocket handshake; no local process does. Accepting
+        # its absence let any process on the machine drive the agent (H3, verified with raw sockets:
+        # a handshake with no Origin went from 101 to 403).
+        if not origin or not origin.startswith("moz-extension://"):
             conn.sendall(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n")
             raise ValueError("Forbidden origin")
         accept = base64.b64encode(hashlib.sha1((headers["sec-websocket-key"] + GUID).encode()).digest()).decode()

@@ -86,7 +86,7 @@ jobs:
           CHROME_PATH: /usr/bin/google-chrome
           BU_CDP_URL: http://127.0.0.1:9333
           PLANNER_PROVIDER: nvidia
-          PLANNER_MODEL: z-ai/glm-5.3-flash
+          PLANNER_MODEL: meta/llama-3.2-11b-vision-instruct
           PLANNER_REASONING: none
           # Two walls measured live: gpt-oss-20b types the airport name and then refuses
           # to commit the autocomplete suggestion, and NVIDIA's NIM endpoint answered the

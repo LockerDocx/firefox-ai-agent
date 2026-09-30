@@ -19,9 +19,9 @@ model of whatever free key is present**. You only need to set the key:
 
 | Keys present | Planner | Executor | Text helper |
 | --- | --- | --- | --- |
-| `NVIDIA_API_KEY` only (recommended) | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` |
+| `NVIDIA_API_KEY` only (recommended) | `nvidia:meta/llama-3.2-11b-vision-instruct` | `nvidia:meta/llama-3.2-11b-vision-instruct` | `nvidia:meta/llama-3.2-11b-vision-instruct` |
 | `GROQ_API_KEY` only | `groq:openai/gpt-oss-120b` | `groq:openai/gpt-oss-20b` | `groq:openai/gpt-oss-20b` |
-| Both keys, or `DEEPSEEK_API_KEY` alone | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` | `nvidia:z-ai/glm-5.3-flash` |
+| Both keys, or `DEEPSEEK_API_KEY` alone | `nvidia:meta/llama-3.2-11b-vision-instruct` | `nvidia:meta/llama-3.2-11b-vision-instruct` | `nvidia:meta/llama-3.2-11b-vision-instruct` |
 
 With one key that provider runs all three roles — the planner included, on the stronger model of
 that provider rather than the executor's. **With both keys present nothing is mixed**: the first
@@ -58,7 +58,7 @@ NVIDIA_API_KEY=nvapi-...
 PLANNER_MODEL=z-ai/glm-5.3
 
 # Text helper on Groq too: measured ~300 ms per field vs ~22 s with
-# z-ai/glm-5.3-flash (which reasons by default).
+# meta/llama-3.2-11b-vision-instruct (which reasons by default).
 TEXT_MODEL_PROVIDER=groq
 TEXT_MODEL=openai/gpt-oss-20b
 TEXT_MODEL_REASONING=low
@@ -77,7 +77,7 @@ prompts and token budgets the agent itself uses, each candidate on its own CI jo
 | **Groq only** (the fast anchor) | 1.4 s | **0.4 s** | **0.26 s** | plans 3/3 · routing 12/12 · values 4/4 |
 | NVIDIA only, old defaults (`glm-5.3` plans, `gpt-oss-20b` executes) | 30 s | 36 s | 9 s | plans 2-3/3 · routing 12/12 · values 4/4 |
 | NVIDIA only, `glm-5.3` with thinking off (the faster arrangement, one line away) | 37 s | **2-5 s** | 1.6-98 s | plans 2/3 · routing 12/12 · values 4/4 |
-| NVIDIA only, `z-ai/glm-5.3-flash` with thinking off (**current defaults**) | 85 s | 43 s | 42 s | plans 2/2 · routing 12/12 · values 4/4 |
+| NVIDIA only, `meta/llama-3.2-11b-vision-instruct` with thinking off (**current defaults**) | 85 s | 43 s | 42 s | plans 2/2 · routing 12/12 · values 4/4 |
 
 Read it as medians of a handful of calls, and read the spread: NVIDIA NIM's free tier answered the same
 prompt in 1.6 s once and in 98 s on another run, and once did not answer for 60 s at all (the retry then
@@ -87,7 +87,7 @@ key, the Groq key is the lever — provided you stay under its 8 000 tokens per 
 defaults instead keep one provider (NVIDIA) for the whole mission, which is slower per step and
 finishes.
 
-The defaults are `z-ai/glm-5.3-flash` with thinking off in all three roles, which was an explicit
+The defaults are `meta/llama-3.2-11b-vision-instruct` with thinking off in all three roles, which was an explicit
 product decision on 26 September 2026. On 26-27 September, with the same key, that arrangement measured
 **37.4 s** median for the executor role (12 calls), **56.1 s** for the text helper (4) and **75.7 s** for
 the planner (2 valid of 9, four of them timing out at 60 s), against **1.9 s**, **1.4 s** and **25.7 s**
@@ -105,11 +105,11 @@ The derivation above already does this for you when only that key is present; to
 
 ```bash
 PLANNER_PROVIDER=nvidia
-PLANNER_MODEL=z-ai/glm-5.3-flash
+PLANNER_MODEL=meta/llama-3.2-11b-vision-instruct
 POLICY_PROVIDER=nvidia
-POLICY_MODEL=z-ai/glm-5.3-flash
+POLICY_MODEL=meta/llama-3.2-11b-vision-instruct
 TEXT_MODEL_PROVIDER=nvidia
-TEXT_MODEL=z-ai/glm-5.3-flash
+TEXT_MODEL=meta/llama-3.2-11b-vision-instruct
 # thinking is off by default; name another model here for any role
 # (z-ai/glm-5.3 measured 1.9 s per executor step against 37.4 s)
 NVIDIA_API_KEY=nvapi-...

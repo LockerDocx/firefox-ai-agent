@@ -26,18 +26,20 @@ Extraído del propio código (no de suposiciones): `pyproject.toml`, `extension/
 ## 2. Configuración recomendada
 
 - **Nada obligatorio**: la clave que el panel pide es la de **NVIDIA**, y esa sola cubre los tres roles con
-  `z-ai/glm-5.3-flash` sin razonamiento (el modelo y el «sin pensar» son la elección del 26/09/2026). Si la que
+  `meta/llama-3.2-11b-vision-instruct` sin razonamiento (el modelo y el «sin pensar» son la elección del 26/09/2026). Si la que
   tienes es la de **Groq**, también funciona todo sola: planner `groq:openai/gpt-oss-120b`, executor y text
   `openai/gpt-oss-20b`. **Se pega en el sidebar de Firefox** (tarjeta de primer arranque, o botón
   *🔑 API keys*); el host la guarda en `.env` y la usa al instante, sin reiniciar nada. Plantilla para
   escribirla a mano: `.env.example`.
 - **Overrides opcionales** en `.env`/panel: `POLICY_*`, `PLANNER_*`, `TEXT_MODEL_*` (`PROVIDER`/`MODEL`/`BASE_URL`/`API_KEY`
   por rol). Lo configurado a mano siempre gana a lo derivado. Referencia completa: `docs/providers.md`.
-- **Los más rápidos medidos** (26/09/2026, misma clave de NVIDIA): `z-ai/glm-5.3` sin razonamiento —
-  *executor* **1,9 s** de mediana (12 llamadas), *text* **1,4 s** (4), *planner* 25,7 s (9). El modelo que se
-  envía, `z-ai/glm-5.3-flash` sin razonamiento, midió **37,4 s**, **56,1 s** y **75,7 s** en esos mismos tres
-  papeles: en la capa gratuita el coste es la cola, no el tamaño del modelo. Para cambiar de modelo:
-  panel **⚙️ Modelos y parámetros** o `POLICY_MODEL=z-ai/glm-5.3` en el `.env`.
+- **Velocidades medidas por papel.** El ejecutor y el redactor de texto van rápidos en la capa gratuita de NVIDIA; el
+  planificador es el lento, porque pide un razonamiento largo. En el log real de una instalación (27/09/2026,
+  `nvidia:meta/llama-3.2-11b-vision-instruct`): *executor* **402 ms**, *planner* **21,0 s**. El cambio de modelo
+  del 27/09 (v0.12.7) se hizo por esto: los dos modelos `glm-5.3` de NVIDIA llegaban a **>300 s de cola** en la
+  capa gratuita, mientras que el modelo actual promedió **464 ms** en *routing* y **540 ms** en *text**, con **100 %**
+  en la batería de enrutado. Para cambiar de modelo: panel **⚙️ Modelos y parámetros** o `POLICY_MODEL=<otro-modelo>`
+  en el `.env`.
 - **Instalación**: `uv sync` (hay `uv.lock`) o `python -m venv .venv && pip install -e .`
 - **Arranque (opcional)**: `start-host.*` registra el host en Firefox (manifest nativo por usuario, sin admin) y a partir
   de ahí el navegador lo arranca solo al abrir el sidebar. `jev-register-host --unregister` lo revierte;

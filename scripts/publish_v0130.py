@@ -40,11 +40,34 @@ release_body = """# Firefox AI Agent v0.13.0 — FastPath v1.0 Architecture Rele
 
 ### ⚡ Highlights & Key Features
 
-- **FastPath Architecture v1.0 (Local-First Action-Verifiable Agent):** Complete architectural redesign replacing heavy HTML prompting with actionable AXTree candidate indexing, GBNF grammar decoding, 4-level self-healing cascades, and zero-LLM procedural replay.
-- **Sistema 0: Caché Procedimental (`<1 ms`):** Deterministic SHA-256 fingerprint matching (`procedural_cache.py`) for verified action sequences, replaying frequent tasks in <1 ms with automatic postcondition invalidation.
-- **Sistema 1: GBNF Grammar-Constrained Decoding:** Context-free grammar module (`gbnf_grammar.py`) constraining local model token sampling to guarantee 100% valid JSON payload structure.
-- **Sistema 2: Selectores Auto-Reparables (Self-Healing Cascade):** 4-level fallback resolver (`self_healing.py` / `self_healing.js`) matching elements via ARIA accessibility, semantic text, AXTree relative position, and BBox visual coordinates.
-- **Sistema 3: Extractor Ligero AXTree & MutationObserver:** Ultra-compact content script (`ax_tree.js` / `axtree.py`) extracting 3-6 KB payloads of actionable candidates and tracking DOM mutations incrementally.
+# 4. Create GitHub Release
+HIGHLIGHTS = [
+    "- **FastPath Architecture v1.0 (Local-First Action-Verifiable Agent):** Complete architectural "
+    "redesign replacing heavy HTML prompting with actionable AXTree candidate indexing, GBNF grammar "
+    "decoding, 4-level self-healing cascades, and zero-LLM procedural replay.",
+    "- **Sistema 0: Caché Procedimental (`<1 ms`):** Deterministic SHA-256 fingerprint matching "
+    "(`procedural_cache.py`) for verified action sequences, replaying frequent tasks in <1 ms with "
+    "automatic postcondition invalidation.",
+    "- **Sistema 1: GBNF Grammar-Constrained Decoding:** Context-free grammar module (`gbnf_grammar.py`) "
+    "constraining local model token sampling to guarantee 100% valid JSON payload structure.",
+    "- **Sistema 2: Selectores Auto-Reparables (Self-Healing Cascade):** 4-level fallback resolver "
+    "(`self_healing.py` / `self_healing.js`) matching elements via ARIA accessibility, semantic text, "
+    "AXTree relative position, and BBox visual coordinates.",
+    "- **Sistema 3: Extractor Ligero AXTree & MutationObserver:** Ultra-compact content script "
+    "(`ax_tree.js` / `axtree.py`) extracting 3-6 KB payloads of actionable candidates and tracking DOM "
+    "mutations incrementally.",
+]
+release_body = "\n".join(
+    ["# Firefox AI Agent v0.13.0 — FastPath v1.0 Architecture Release", "", "### ⚡ Highlights & Key Features", ""]
+    + HIGHLIGHTS
+    + [
+        "",
+        "### 📦 Verified Release Assets",
+        "- `ai-agent-for-firefox-v0.13.0.xpi` — Firefox WebExtension XPI package",
+        "- `firefox-ai-agent-v0.13.0-source.zip` — Verifiable clean git source code archive",
+        "- `jev_ultrafast-0.13.0-py3-none-any.whl` — Python native host package",
+    ]
+).strip()
 
 ### 📦 Verified Release Assets
 - `ai-agent-for-firefox-v0.13.0.xpi` — Firefox WebExtension XPI package

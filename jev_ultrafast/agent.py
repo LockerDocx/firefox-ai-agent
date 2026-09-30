@@ -4,9 +4,15 @@ import base64
 import time
 from pathlib import Path
 
+from . import routing
 from .browser import Browser, StalePage
 from .model import action_space, choose, field_context, field_text, plan_steps, planning_config, replan_steps
 from .questions import MAX_REPLANS, MAX_STEPS
+
+# A real navigation takes seconds to settle. One immediate re-observation used to abandon the
+# mission in transit, so the loop waits this long for the page to stop changing (H10).
+OBSERVE_RETRY_SECONDS = 10.0
+OBSERVE_RETRY_INTERVAL = 0.2
 
 
 class Agent:
@@ -15,7 +21,10 @@ class Agent:
         if not task:
             raise ValueError("Supply a task")
         plan = [task]
-        self.planner = planning_config()
+        # H12: the route is decided before the planner is paid for, and kept in the state
+        # so the sidebar can say which route the mission took and why.
+        self.route, self.route_decision = routing.needs_a_plan(task)
+        self.planner = planning_config(task) if self.route else None
         self.pending_text = None
         self.browser = browser if browser is not None else Browser(url)
         self.record_dir = Path(record_dir) if record_dir else None
@@ -43,6 +52,8 @@ class Agent:
             plan_index=0,
             replans=0,
             planner=self.planner["model"] if self.planner else None,
+            route=self.route,
+            route_reason=self.route_decision["reason"] if self.route_decision else None,
             decisions=[],
             text_calls=[],
             elapsed_ms=0,
@@ -140,9 +151,20 @@ class Agent:
                 self.command("predict", {})
                 return self.command("act", {"fingerprint": state["page"]["fingerprint"]})
             except StalePage:
+                # A real navigation takes seconds. Re-observing once, immediately, gave up
+                # mid-flight and killed the mission in transit (H10, measured on the live
+                # Wikipedia mission). Wait out the navigation before giving the decision back.
                 state["decision"] = None
                 state["status"] = "ready"
-                state["page"] = state["browser"].observe(screenshot=self.screenshots)
+                deadline = time.monotonic() + OBSERVE_RETRY_SECONDS
+                while True:
+                    try:
+                        state["page"] = state["browser"].observe(screenshot=self.screenshots)
+                        break
+                    except StalePage:
+                        if time.monotonic() >= deadline:
+                            raise
+                        time.sleep(OBSERVE_RETRY_INTERVAL)
                 state["elapsed_ms"] = round((time.perf_counter() - state["started_at"]) * 1000)
                 return self.snapshot()
         elif name == "predict":
@@ -206,8 +228,23 @@ class Agent:
                     _, text, helper = self.pending_text
                 else:
                     text, helper = field_text(context)
+                    if text is None:
+                        # A secret field with no value to put in it. Typing anything would
+                        # mean inventing a credential, so the run stops here and says why:
+                        # clicking Submit on an empty password field is what produced the
+                        # 10-step login loop measured on saucedemo (H11).
+                        state["status"] = "blocked"
+                        state["blocked_reason"] = (
+                            f"'{action['label']}' needs a value the goal does not supply. "
+                            "Add it to the goal and run again; the agent will not invent it."
+                        )
+                        state["elapsed_ms"] = round((time.perf_counter() - state["started_at"]) * 1000)
+                        return self.snapshot()
                     self.pending_text = (context, text, helper)
-                    state["text_calls"].append({**helper, "field": action["label"], "value": text})
+                    # A value typed into a password field never reaches the run history,
+                    # the sidebar or runs.jsonl: the agent can use it, nobody can read it.
+                    shown = "•••" if action.get("secret") else text
+                    state["text_calls"].append({**helper, "field": action["label"], "value": shown})
                 suggestion = self._suggestion_for_repeated_fill(page, action, selected, text)
                 if suggestion is not None:
                     # The typing is already done; committing it is the step that remains.
@@ -226,7 +263,7 @@ class Agent:
                     "probability": decision["probabilities"][selected],
                     "confidence": decision["confidence"],
                     "latency_ms": decision["latency_ms"],
-                    "text": text,
+                    "text": "•••" if action.get("secret") else text,
                     "text_helper": helper["model"] if helper else None,
                     "text_latency_ms": helper["latency_ms"] if helper else 0,
                     "operation": decision["operation"],

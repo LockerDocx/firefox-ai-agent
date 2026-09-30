@@ -8,6 +8,8 @@ does not set its value, so CLICK the suggestion that matches the goal. For date 
 field, then the day, then the confirmation (Done/Apply) — an open calendar sets nothing.
 Set every requested filter/control; a matching result alone does not prove a requested filter was set.
 Do not toggle a checkbox, switch, or radio already in the requested state.
+A field marked "secret" is a password: fill it with the value the GOAL supplies, and if
+the goal supplies none, leave it alone — never invent, guess or reuse a credential.
 Submit populated search fields before opening a result; a populated field alone is not an applied search.
 WAIT only when the needed control is absent/disabled, or submitted results are still loading.
 If Search/Submit is visible and the required fields are ready, CLICK it immediately.

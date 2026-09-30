@@ -6,7 +6,15 @@
     const id=cache.ids.get(e); cache.nodes.set(id,e); return id;
   };
   for (const [id,e] of cache.nodes) if (!e.isConnected) cache.nodes.delete(id);
-  const safe = e => !['password','file','hidden'].includes(e.type);
+  // A password field is a target the agent must be able to TYPE INTO, not one it may
+  // read. Excluding it entirely (which is what "safe" used to do) made every login
+  // impossible: the field was never in the action space, so no choice could reach it and
+  // the agent clicked Submit until the budget ran out (H11, measured on saucedemo with
+  // both models and three variants). So the field is offered, and its contents are
+  // masked everywhere they could otherwise travel: the action, the page key and the guard.
+  const secret = e => e.type === 'password';
+  const mask = e => secret(e) ? (e.value ? '•••' : '') : (e.value ?? '');
+  const safe = e => !['file','hidden'].includes(e.type);
   const visible = e => !e.closest('[aria-hidden="true"],[inert]') &&
     e.checkVisibility({checkOpacity:true,checkVisibilityCSS:true});
   const name = (e,seen=new Set()) => {
@@ -43,11 +51,11 @@
   };
   cache.pageKey=()=>[performance.timeOrigin,location.href,scrollX,scrollY,innerWidth,innerHeight,
     [...document.querySelectorAll('input,textarea,select')].filter(safe)
-      .map(e=>[identity(e),e.value,e.checked,e.selectedIndex,e.disabled,e.readOnly])];
+      .map(e=>[identity(e),mask(e),e.checked,e.selectedIndex,e.disabled,e.readOnly])];
   cache.guard=e=>{
     if (!e?.isConnected || !visible(e)) return null;
     const scope=e.closest('form,dialog,[role="dialog"],article,li,tr,[role="row"]') || e.parentElement;
-    return [identity(e),role(e),name(e),e.value??null,e.checked??null,e.selectedIndex??null,
+    return [identity(e),role(e),name(e),mask(e)??null,e.checked??null,e.selectedIndex??null,
       e.readOnly??null,e.matches(':disabled'),e.getAttribute('aria-disabled'),
       e.getAttribute('aria-expanded'),e.getAttribute('aria-checked'),e.getAttribute('aria-selected'),
       e.getAttribute('href'),scope?.innerText?.slice(0,6000)||''];
@@ -73,9 +81,11 @@
       const editable=!e.readOnly && e.getAttribute('aria-readonly')!=='true' &&
         (['textbox','searchbox','spinbutton'].includes(rname) ||
           (rname==='combobox' && ['INPUT','TEXTAREA'].includes(e.tagName)));
-      const value='value' in e ? String(e.value) :
-        e.isContentEditable || rname==='combobox' ? e.innerText.trim() : '';
-      actions.push({...base,kind:editable?'fill':'click',value});
+      const value=secret(e) ? '' : ('value' in e ? String(e.value) :
+        e.isContentEditable || rname==='combobox' ? e.innerText.trim() : '');
+      const entry={...base,kind:editable?'fill':'click',value};
+      if (secret(e)) entry.secret=true;
+      actions.push(entry);
       // While a combobox already shows its list (aria-expanded), the "Open" affordance
       // does nothing, and offering it invites exactly the wrong click: the live flights
       // mission clicked "Open Where to?" three times with a suggestion list on screen

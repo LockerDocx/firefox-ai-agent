@@ -15,6 +15,89 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.13.1] — 2026-09-30
+
+The published v0.13.0 tag could not complete a single real action: a JavaScript SyntaxError on
+every click, fill and select, and a bridge that accepted any local process. Both are fixed here,
+with a regression test for each. Six findings from a two-phase review of the tag (585 tests, a
+static pass, then eleven live missions with a real browser and a real key) are closed; the rest
+stay open and are written down rather than hidden.
+
+### Fixed
+
+- **No action could be executed at all.** `target_expression` wrapped the action JSON in quotes,
+  so the literal closed on its first inner quote and the browser answered
+  `SyntaxError: missing ) after argument list` — every click, fill and select became a
+  `StalePage`. Verified with `node --check`, and on a real example.com click. It broke both
+  paths: the Chrome one and the sandbox one. Nothing covered it: 585 unit tests replace the CDP
+  layer, and the broken half of `browser.py` is the half the suite does not touch.
+- **A slow navigation ended the mission.** The stale-page recovery re-observed once, immediately.
+  Any real navigation slower than that raised an uncaught `StalePage` and killed the run in
+  transit — it killed the Wikipedia mission on its first run. It now waits out the page for up
+  to ten seconds before giving the decision back, and still gives up after that.
+- **Password fields were excluded from the action space.** `safe = e =>
+  !['password','file','hidden'].includes(e.type)` meant the field never reached the element
+  table, so no choice could reach it and every login was impossible: the agent typed the
+  username and clicked Submit until the budget ran out. That is the failure the review
+  attributed to the model choosing the wrong thing; it was a hard block, and no prompt change
+  would have reached it. The field is now offered as a fill target, and its contents are masked
+  in all three places a value travels: the action, the page key and the guard. An empty password
+  still reads differently from a filled one, so a field is not typed into twice.
+- **The bridge accepted handshakes with no `Origin`.** Firefox always sends one; no local
+  process does, so its absence identifies an attacker rather than a client. A handshake without
+  it now gets `403`, and the check is pinned by a regression test that replays raw sockets.
+- **The README described a model the code stopped sending, and a test count that was a year of
+  releases out of date.** Both now match the code, across the README, the Spanish guide, the
+  `docs/` set and the three workflows that pinned the retired model — the rule this repository
+  set itself in v0.12.5.
+- **`ruff check .` was red on `main`.** The last commit before this one shipped a publish script
+  with five lines over the limit, and CI runs the linter over the whole repository.
+
+### Added
+
+- **A budget for the executor prompt (H6).** Measured, not guessed: `scripts/bench_prompt_size.py`
+  reproduces the dense page that cost 30.053 characters per decision and prints the whole
+  trade-off curve. The element table was 88 % of it, and the real amplifier was not the 250
+  elements but the options of native dropdowns — one `<select>` is one element that renders a
+  line per option. Options now carry their own budget, and an option line no longer repeats its
+  element's label, which was pure waste. On a dense page the prompt went from **21.233 to
+  10.111 characters (~5.308 to ~2.528 tokens), −52.4 %**, and it stopped growing with the page.
+  The cut is safe by construction: whole elements go or stay, a dropdown never loses an option,
+  what the run just did is never dropped, and the omission is stated in the prompt instead of
+  hidden.
+- **Routing by task (H12).** A deterministic, network-free classifier decides whether a mission
+  is worth a planner call: one is 402 ms, the other 21.045 ms, and the battery showed the
+  planner inventing domains the user never wrote. `JEV_ROUTING=auto|always|never`; a caller
+  that passes no goal keeps exactly the behaviour it had. The route and its reason are shown in
+  the sidebar, because a cost decision the user cannot see is one they have to trust blindly.
+  Measured honestly: it saves 1 of the 11 missions, which is why H9 (anchoring the plan to a
+  domain whitelist) is the real fix.
+- **`scripts/measure_routing.py`** replays the eleven live goals through the router and reports
+  the calls avoided — and says in its own output that this is not the mission result, which needs
+  the live battery and a real key.
+
+### Changed
+
+- A credential the goal does not supply is now an answer, not a failure. The text helper's
+  `{"text": null}` is accepted for a secret field, and the run stops with a reason the user can
+  act on instead of clicking Submit on an empty field. The sidebar shows it as a warning, not an
+  error: a login without a password is not a malfunction. The agent does not invent, guess or
+  reuse a credential, and what it types into a secret field is masked in the run history and in
+  the panel — the browser still receives it, or nothing would be fixed.
+
+### Not measured, and still open
+
+- **The mission success rate.** The acceptance criteria for the routing work (≥ 60 % across the
+  eleven missions) need the live battery with a real browser and a real key. Nothing in this
+  release claims it.
+- **H1/H2 in the sidebar's own copy, H4** (coverage: `demo.py` 0 %, `browser.py` 47 %),
+  **H5** (two interpolations without `escape()` in `sidebar.js`), **H7** (`jev --help` hangs,
+  no `argparse`), **H9** (the planner invents domains) and **H12**'s success target.
+- **A `moz-extension://` origin from another extension is still accepted.** With a temporary
+  add-on loaded through `about:debugging` the internal id changes on every load, so pinning it
+  would break the documented flow. The right medium-term fix is the bridge token on by default,
+  which the extension already sends and the host already compares.
+
 ## [0.13.0] — 2026-09-28
 
 ### Added
