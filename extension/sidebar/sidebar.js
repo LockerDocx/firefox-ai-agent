@@ -83,9 +83,9 @@ function renderLive(live) {
         .slice(-12)
         .map(
           (h) =>
-            `<div><span class="number">${String(h.step).padStart(2, "0")}</span><span>${escape(h.action)}` +
+            `<div><span class="number">${escape(String(h.step).padStart(2, "0"))}</span><span>${escape(h.action)}` +
             (h.text ? ` <b>“${escape(h.text)}”</b>` : "") +
-            `</span><span class="time">${h.latency_ms} ms</span></div>`,
+            `</span><span class="time">${escape(h.latency_ms)} ms</span></div>`,
         )
         .join("")
     : '<div><span class="number">—</span><span>No actions yet</span></div>';

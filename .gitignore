@@ -10,3 +10,7 @@ workspace/
 
 dist/
 laya-install.json
+
+# pytest-cov leaves this behind; it is a measurement, not a source file.
+.coverage
+htmlcov/

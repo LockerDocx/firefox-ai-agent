@@ -126,6 +126,26 @@ table at the top of [laya.md](laya.md).
 3. A `DONE` choice marks the current step complete and continues with the next; the last `DONE` ends the run.
 4. `BLOCKED` or three consecutive no-change actions trigger a bounded **replan** (max 2 per run): the planner sees the completed steps, the failure reason, and the current page, and returns only the remaining work.
 5. The plan is guidance text only — the executor still validates every choice against the observed action space, so no step can invent elements or selectors.
+6. **A step may not name a domain nobody has seen.** A plan is an instruction, and an instruction to a site the user never wrote turns the executor into an obedient cursor of a hallucination — measured in the eleven-mission battery, where M1 was sent to `afrinic.net`. The anchor is everything the agent has already seen: the goal, the page URL, and the page text. A domain visible on the page is discoverable, so naming it is not inventing it. The offending step is dropped, not the whole plan; if nothing survives, the mission runs on the goal alone, exactly as it did with no planner.
+
+   `JEV_PLAN_DOMAINS=off` turns the filter off if it ever gets in the way of a legitimate mission. It is on by default and needs no configuration.
+
+   | `JEV_PLAN_DOMAINS` | Effect |
+   |---|---|
+   | unset *(default)* | Steps naming an unseen domain are dropped |
+   | `off` | No filtering; the planner's plan is used as it comes |
+
+### When the planner is worth paying for
+
+A planner call is a full reasoning call — 21.045 ms measured, against 402 ms for the executor — and in the battery it made missions *worse*, not better, because it invented domains. So a deterministic, network-free classifier decides first.
+
+| `JEV_ROUTING` | Effect |
+|---|---|
+| `auto` *(default)* | One-gesture missions skip the planner; multi-step ones plan |
+| `always` | Always plan (the behaviour before v0.13.1) |
+| `never` | Never plan |
+
+The route and the reason for it are shown in the sidebar, because a cost decision the user cannot see is one they have to trust blindly. Measured honestly: it saves 1 of the 11 missions, so `H9` above is the real fix, not the router.
 
 ## Presets
 

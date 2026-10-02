@@ -15,6 +15,111 @@ Chrome, with TypeSafe's hosted policy and the Mercury text model. They are label
 appear. This build drives Firefox with Groq/NVIDIA and has not been measured yet.
 
 
+## [0.13.3] — 2026-10-01
+
+The four findings the independent audit of v0.13.1 confirmed as open, plus the harness that
+makes the two unmeasured acceptance criteria measurable. Nothing here claims a mission
+success rate: that still needs a real browser and a real key.
+
+### Fixed
+
+- **The planner could send the agent to a domain the user never wrote.** Measured in the
+  eleven-mission battery: M1 was routed to `afrinic.net` — the regional internet registry, not
+  the destination — and the executor followed the instruction. A plan is an instruction, and an
+  instruction to a site nobody has seen turns the executor into an obedient cursor of a
+  hallucination. (H9)
+
+  A step may now not name a domain absent from all three things the agent has already seen:
+  the goal, the page URL and the page text. The anchor is not the goal, because the goal is
+  not enough — «search NVIDIA NIM» never says nvidia.com and reaching it *is* the mission; a
+  domain visible on the page is discoverable, so naming it is not inventing it. The offending
+  step is dropped rather than the whole plan, and if nothing survives, the empty list is a
+  signal both callers already understand, so the mission runs on the goal alone exactly as it
+  did with no planner at all.
+
+  Recognition is deliberately conservative: only schemed URLs, `www.`-prefixed names and
+  known TLDs count as domains, so `config.js` is a file, not a destination, and an unlisted
+  suffix is left alone. The error always runs toward letting a step through, because a false
+  positive would delete a legitimate step. `JEV_PLAN_DOMAINS=off` turns it off; on by default,
+  nothing to configure.
+- **`jev --help` printed nothing and stayed alive until a timeout killed it.** There was no
+  argparse at all in `demo.py` — `main()` started the server before looking at the arguments,
+  so `--help` opened the demo on 8766 and waited. The order is the fix: arguments are read
+  before anything is raised, because a `--help` that first asks for a key hangs on exactly the
+  machine where a help flag is typed. It now exits in 0.4 s with code 0, and `--port`,
+  `--scenario`, `--version` and `--no-open` come with it. (H7)
+- **Two interpolations reached the sidebar's `innerHTML` without `escape()`**: `h.step` and
+  `h.latency_ms`, both integers this agent produces itself, so the risk was low and the fix
+  one line each. (H5) What mattered was that nothing stopped a third, so the release adds a
+  guard over the whole file: everything written directly to `innerHTML` goes through
+  `escape()`. It is not a one-line check — the first version watched only the line holding
+  `innerHTML =` and the templates span three or four lines, so it saw nothing and would have
+  passed the very lines it exists for. Escaping also happens at the sink rather than at the
+  interpolation: 132 of the file's interpolations are built for `addEntry()` and escaped later,
+  so demanding an escape where the string is constructed would have produced 132 false
+  positives.
+
+  Working, the guard found seven more that the audit had not reported. They are literals of the
+  file — a fixed label set, a computed number, a loop over a literal array — and they are
+  **not** vulnerabilities. They are documented with their reason, each with a structural check
+  that withdraws the exception the moment it stops being true.
+
+### Added
+
+- **`scripts/live_battery.py` — the two criteria that had no number.** The success rate (>= 60 %
+  over eleven missions) and H11's 100 % of two-field forms both need a real browser and a real
+  key, so no test can close them. What *can* be tested, and is where a battery goes wrong, is
+  the verdict. A mission counts as successful when its final URL says so, not when the agent
+  announces it: with `DONE` as the criterion the previous battery would have measured
+  obedience, and its one clear success is what that ambiguity produces.
+
+  Three outcomes that are not interchangeable — `EXITO`, `FALLO`, `SIN CLAVE` — and a run
+  without a credential is H11 working, not a failed login, so it is counted apart rather than
+  as a form that was missed. An environment problem is not a mission result: a page that will
+  not open, a missing local fixture, or a browser that never started all leave the denominator,
+  and the run says `NO EVALUABLE` instead of printing a percentage that cannot be compared with
+  the target. It proved that the hard way — a smoke test with a fake provider had the harness
+  declaring `H11 NO CUMPLIDO 0/1` without measuring a single form.
+
+  A mission that reaches its goal and then stalls still counts as a success, because the rate
+  measures whether the agent gets there, not how it felt at the end, and scoring the mood
+  would measure the leftover step budget. The report masks the credential, which the goal
+  carries inside it — a battery report containing the password is the same leak H11 fixed in
+  the history, one day later in another file. Exit 0 only when both criteria hold, 1 when they
+  are measured and missed, 2 when they were not measurable at all.
+
+  The credentials the report needs are read from the environment, never from the repo.
+
+### Changed
+
+- Coverage where the audit said it was missing, measured with `pytest-cov`: `browser.py`
+  47 % -> **77 %** (the audit's >= 70 % target) and `demo.py` 0 % -> **69 %**; the package
+  total 82 % -> **85 %**. What remains in `browser.py` needs a real browser — the
+  daemon-backed constructor and the autocomplete wait over a real DOM — and is not counted as
+  covered.
+
+  The new tests cover the half that hid the central defect: the full execution path now
+  asserts that a click presses and releases at the element's centre, that a fill selects the
+  old text before typing, that a `<select>` neither clicks nor types, that a non-integer node
+  can never become a selector, and that a stale page is refused immediately before the
+  mutation. It also pins the demo's loopback guarantee: a foreign `Host`, a POST without the
+  token, a foreign `Origin` and an oversized body are all refused.
+
+- `JEV_ROUTING` was documented only in the changelog since v0.13.1. It is now in `.env.example`
+  and in the environment reference of `docs/providers.md`, next to `JEV_PLAN_DOMAINS`.
+
+### Still open
+
+- **Both acceptance criteria are still unmeasured.** The battery above produces the number; it
+  has not been run against a real browser and a real key, so this release claims none.
+- The `moz-extension://` origin from another extension is still accepted. Pinning the internal
+  id would break the documented `about:debugging` flow, and the bridge token the extension
+  already sends is the medium-term fix.
+- The fast path (`procedural_cache`, `gbnf_grammar`, `self_healing`, `axtree`) remains built
+  and tested in isolation but not wired into the loop.
+
+819 tests, ruff clean, all JavaScript parses. Verified under UTF-8 and under a legacy code page.
+
 ## [0.13.2] — 2026-09-30
 
 The change v0.13.1 should have carried. Its two JavaScript tests ran `node -e <script>` with

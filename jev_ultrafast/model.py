@@ -769,8 +769,100 @@ def _validate_steps(answer):
     return cleaned
 
 
-def _planner_request(mission, page, *, reason=None, plan=None, plan_index=0, history=None):
+# ── H9 · un plan no puede nombrar un dominio que nadie ha visto todavía ─────────
+
+# El fallo medido: en la batería de once misiones el planificador inventó dominios que el
+# usuario nunca escribió — M1 derivó a AFRINIC — y el ejecutor los siguió. Un plan es una
+# instrucción, y una instrucción que lleva a un sitio que nadie ha visto convierte al
+# ejecutor en un cursor obediente de una alucinación.
+#
+# El ancla no es el objetivo, porque el objetivo no basta: «buscar NVIDIA NIM» no menciona
+# nvidia.com y sin embargo llegar ahí ES la misión. El ancla es todo lo que el agente ya
+# vio: lo que escribió el objetivo, la URL de la página y el texto que hay en pantalla. Un
+# dominio que aparece en la página es descubrible, así que nombrarlo en el plan no es
+# inventarlo. Uno que no aparece en ninguno de los tres sí lo es.
+
+# Solo se reconoce como dominio lo que trae esquema, lo que empieza por www., o lo que
+# termina en un TLD de esta lista. El reconocimiento conservador es lo importante: lo que
+# no se reconoce como dominio no se restringe, así que un falso positivo no rompe ninguna
+# misión legítima. Sin lista, «configurar el archivo config.js» sería un dominio, y el paso
+# legítimo que lo menciona se eliminaría.
+KNOWN_TLDS = frozenset("""
+    com net org edu gov mil int info biz name pro coop museum aero jobs mobi travel
+    io ai app dev co me tv cc xyz online site tech cloud store shop blog wiki live life
+    world today news media network systems solutions agency digital design studio group
+    ac ad ae ar at au be bg br by ca ch cl cn cz de dk eg es eu fi fr gr hk hr hu id ie
+    il in iq ir it jp kr lt lu lv ma mx my nl no nz pl pt qa ro rs ru se sg sk th tr tw
+    ua uk us vn za
+""".split())
+
+DOMAIN = re.compile(r"\b(?:https?://)?((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,24})\b", re.I)
+
+
+def mentioned_domains(*texts):
+    """Los dominios que un texto nombra, en minúsculas y sin esquema ni ruta."""
+    found = set()
+    for text in texts:
+        if not text:
+            continue
+        for match in DOMAIN.finditer(str(text)):
+            host = match.group(1).lower().strip(".")
+            if host.rsplit(".", 1)[-1] in KNOWN_TLDS:
+                found.add(host)
+    return found
+
+
+def _same_site(one, other):
+    """Se comparan por etiquetas, para que www.ejemplo.com y ejemplo.com sean el mismo sitio."""
+    return one == other or one.endswith("." + other) or other.endswith("." + one)
+
+
+def plan_domains(mission, page):
+    """Los dominios que la misión y la página actual ya han puesto a la vista."""
+    page = page or {}
+    return mentioned_domains(mission, page.get("url"), page.get("title"), page.get("text"))
+
+
+def plan_domains_enabled():
+    """Válvula de seguridad: si el filtro estorba a una misión legítima, se apaga con off.
+
+    Por defecto no hay nada que configurar, que es como se configura el resto del agente.
+    """
+    return (os.environ.get("JEV_PLAN_DOMAINS") or "").strip().lower() not in {"off", "0", "false", "no"}
+
+
+def anchored_steps(steps, allowed):
+    """Quita del plan los pasos que llevan a un dominio que nadie ha visto.
+
+    Se quita el paso, no el plan entero: un plan de cuatro pasos con uno alucinado sigue
+    siendo un plan útil, y el presupuesto de pasos no conviene gastarlo en volver a
+    preguntar. Si no queda ninguno se devuelve la lista vacía, y quien llama cae al bucle
+    de objetivo único, que es el comportamiento seguro y ya existía.
+    """
+    if not allowed or not plan_domains_enabled():
+        return list(steps)
+    kept = []
+    for step in steps:
+        invented = [
+            host for host in mentioned_domains(step)
+            if not any(_same_site(host, site) for site in allowed)
+        ]
+        if not invented:
+            kept.append(step)
+    return kept
+
+
+def _planner_request(mission, page, *, reason=None, plan=None, plan_index=0, history=None, allowed=None):
     lines = ["MISSION: " + mission, "", f"PAGE: {page.get('url', '')} — {page.get('title', '')}"]
+    if allowed and plan_domains_enabled():
+        shown = ", ".join(sorted(allowed)[:12])
+        lines += [
+            "",
+            f"DOMAINS ALREADY IN VIEW: {shown}",
+            "Do not name or navigate to any other domain. If the mission needs a site that is not on",
+            "that list, write the step as what to do there ('open the first result') instead of naming",
+            "a domain: the executor can only reach what is on the page.",
+        ]
     if reason:
         done = ["  ✓ " + step for step in (plan or [])[:plan_index]]
         remaining = ["  ✗ " + step for step in (plan or [])[plan_index:]]
@@ -818,11 +910,16 @@ def _plan_with_one_retry(provider, user):
 def plan_steps(mission, page):
     """The planner decomposes the mission into a short ordered checklist of browser steps."""
     provider = providers.resolve("planner")
-    return _plan_with_one_retry(provider, _planner_request(mission, page))
+    allowed = plan_domains(mission, page)
+    steps = _plan_with_one_retry(provider, _planner_request(mission, page, allowed=allowed))
+    return anchored_steps(steps, allowed)
 
 
 def replan_steps(mission, plan, plan_index, reason, page, history):
     """Replacement steps for the remaining plan after a blocked or stalled step."""
     provider = providers.resolve("planner")
-    user = _planner_request(mission, page, reason=reason, plan=plan, plan_index=plan_index, history=history)
-    return _plan_with_one_retry(provider, user)
+    allowed = plan_domains(mission, page)
+    user = _planner_request(
+        mission, page, reason=reason, plan=plan, plan_index=plan_index, history=history, allowed=allowed
+    )
+    return anchored_steps(_plan_with_one_retry(provider, user), allowed)

@@ -1,6 +1,6 @@
 [project]
 name = "jev-ultrafast"
-version = "0.13.2"
+version = "0.13.3"
 description = "Free open-source AI agent that drives your Firefox: you say the goal, it navigates, clicks and types."
 readme = "README.md"
 license = "MIT"

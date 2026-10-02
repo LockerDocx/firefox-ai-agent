@@ -146,7 +146,7 @@ Configuration, presets and self-hosted gateways: [docs/providers.md](docs/provid
 git clone https://github.com/LockerDocx/firefox-ai-agent.git
 cd firefox-ai-agent
 python -m venv .venv && .venv/bin/pip install -e ".[documents]" pytest ruff   # Windows: .venv\Scripts\pip
-.venv/bin/python -m pytest -q        # 661 tests, no paid API calls
+.venv/bin/python -m pytest -q        # 819 tests, no paid API calls
 .venv/bin/python -m ruff check .
 ```
 
